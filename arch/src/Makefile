@@ -23,6 +23,9 @@ ifeq ($(BUILD_HAS_MULTITHREADING),yes)
     BS_LIB_SOURCES_host += host_thread.c
 endif
 
+BS_LIB_SOURCES_optee += optee.c
+BS_LIB_SOURCES_optee += optee_interrupt.c
+
 BS_LIB_INCLUDES += $(ARCH_DIR)/include
 BS_LIB_INCLUDES += $(FWK_DIR)/include
 

@@ -77,6 +77,10 @@ else
     endif
 endif
 
+ifeq ($(BS_ARCH_ARCH),optee)
+    DEFINES += BUILD_OPTEE
+endif
+
 #
 # Warning flags
 #

@@ -27,7 +27,9 @@ ifneq ($(findstring $(BS_FIRMWARE_CPU),$(ARMV7M_CPUS)),)
     CFLAGS += -mno-unaligned-access # Disable unaligned access code generation
 else ifeq ($(BS_FIRMWARE_CPU),host)
     BS_ARCH_ARCH := host
-
+else ifeq ($(BS_FIRMWARE_CPU),optee)
+    BS_ARCH_ARCH := optee
+    BS_ARCH_CPU := cortex-a53
 else
     $(erro "$(BS_FIRMWARE_CPU) is not a supported CPU. Aborting...")
 endif
