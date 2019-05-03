@@ -847,6 +847,7 @@ int fwk_thread_put_event_and_wait(struct fwk_event *event,
     struct fwk_event *processed_event;
     uint32_t flags;
 
+	FWK_HOST_PRINT("[FWK] fwk_thread_put_event_and_wait\n");
     if (!ctx.running) {
         status = FWK_E_STATE;
         goto error;
@@ -855,13 +856,16 @@ int fwk_thread_put_event_and_wait(struct fwk_event *event,
     if ((event == NULL) || (resp_event == NULL))
         goto error;
 
+	FWK_HOST_PRINT("[FWK] fwk_thread_put_event_and_wait 1 \n");
     target_thread_ctx = thread_get_ctx(event->target_id);
     if (target_thread_ctx == NULL)
         goto error;
 
+	FWK_HOST_PRINT("[FWK] fwk_thread_put_event_and_wait 2 \n");
     if (!fwk_module_is_valid_event_id(event->id))
         goto error;
 
+	FWK_HOST_PRINT("[FWK] fwk_thread_put_event_and_wait 3 \n");
     if ((fwk_interrupt_get_current(&interrupt) == FWK_SUCCESS) ||
         (ctx.current_thread_ctx == &ctx.common_thread_ctx) ||
         (target_thread_ctx == ctx.current_thread_ctx)) {
@@ -869,6 +873,7 @@ int fwk_thread_put_event_and_wait(struct fwk_event *event,
         goto error;
     }
 
+	FWK_HOST_PRINT("[FWK] fwk_thread_put_event_and_wait 4 \n");
     if (ctx.current_event != NULL)
         event->source_id = ctx.current_event->target_id;
     else if (!fwk_module_is_valid_entity_id(event->source_id))

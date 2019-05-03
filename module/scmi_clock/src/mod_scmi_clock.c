@@ -15,6 +15,7 @@
 #include <fwk_macros.h>
 #include <fwk_module.h>
 #include <fwk_module_idx.h>
+#include <fwk_host.h>
 #include <internal/scmi.h>
 #include <internal/scmi_clock.h>
 #include <mod_clock.h>
@@ -657,6 +658,8 @@ static int scmi_clock_get_scmi_protocol_id(fwk_id_t protocol_id,
 {
     int status;
 
+	FWK_HOST_PRINT("[SCMI] scmi_clock_get_scmi_protocol_id id %04x\n", protocol_id.value);
+
     status = fwk_module_check_call(protocol_id);
     if (status != FWK_SUCCESS)
         return status;
@@ -671,6 +674,8 @@ static int scmi_clock_message_handler(fwk_id_t protocol_id, fwk_id_t service_id,
 {
     int status;
     int32_t return_value;
+
+	FWK_HOST_PRINT("[SCMI] scmi_clock_message_handler id %04x service %0x4 size %lu msg %0x4\n", protocol_id.value, service_id.value, payload_size, message_id);
 
     static_assert(FWK_ARRAY_SIZE(handler_table) ==
         FWK_ARRAY_SIZE(payload_size_table),
@@ -714,6 +719,8 @@ static int scmi_clock_init(fwk_id_t module_id, unsigned int element_count,
     const struct mod_scmi_clock_config *config =
         (const struct mod_scmi_clock_config *)data;
 
+	FWK_HOST_PRINT("[SCMI] scmi_clock_init id %04x count %u\n", module_id.value, element_count);
+
     if ((config == NULL) || (config->agent_table == NULL))
         return FWK_E_PARAM;
 
@@ -727,6 +734,8 @@ static int scmi_clock_init(fwk_id_t module_id, unsigned int element_count,
 static int scmi_clock_bind(fwk_id_t id, unsigned int round)
 {
     int status;
+
+	FWK_HOST_PRINT("[SCMI] scmi_clock_bind id %04x round %u\n", id.value, round);
 
     if (round == 1)
         return FWK_SUCCESS;
@@ -744,6 +753,8 @@ static int scmi_clock_bind(fwk_id_t id, unsigned int round)
 static int scmi_clock_process_bind_request(fwk_id_t source_id,
     fwk_id_t target_id, fwk_id_t api_id, const void **api)
 {
+	FWK_HOST_PRINT("[SCMI] scmi_clock_process_bind_request src %04x dst %04x api %04x\n", source_id.value, target_id.value, api_id.value);
+
     if (!fwk_id_is_equal(source_id, FWK_ID_MODULE(FWK_MODULE_IDX_SCMI)))
         return FWK_E_ACCESS;
 

@@ -55,10 +55,10 @@ extern const struct fwk_module_config *module_config_table[];
 
 static struct context ctx;
 
-#ifdef BUILD_HOST
+//#ifdef BUILD_HOST
 static const char err_msg_line[] = "[MOD] Error %d in %s @%d\n";
 static const char err_msg_func[] = "[MOD] Error %d in %s\n";
-#endif
+//#endif
 
 /*
  * Static functions
@@ -153,6 +153,7 @@ static int init_module(struct fwk_module_ctx *module_ctx,
     const struct fwk_element *element_table = NULL;
     unsigned int count;
 
+	FWK_HOST_PRINT("[FWK] init_module id %04x\n", module_ctx->id.value);
     if ((module->name == NULL) ||
         (module->type >= FWK_MODULE_TYPE_COUNT) ||
         (module->init == NULL) ||
@@ -168,6 +169,7 @@ static int init_module(struct fwk_module_ctx *module_ctx,
     ctx.bind_id = module_ctx->id;
 
     #ifdef BUILD_HAS_NOTIFICATION
+	FWK_HOST_PRINT("[FWK] init notif\n");
     if (module->notification_count) {
         status = init_notification_dlist_table(module->notification_count,
             &module_ctx->subscription_dlist_table);
@@ -176,17 +178,22 @@ static int init_module(struct fwk_module_ctx *module_ctx,
     }
     #endif
 
+	FWK_HOST_PRINT("[FWK] get element table\n");
     if (module_config->get_element_table != NULL) {
         element_table = module_config->get_element_table(module_ctx->id);
         if (!fwk_expect(element_table != NULL))
             return FWK_E_PARAM;
 
-        for (count = 0; element_table[count].name != NULL; count++)
+        for (count = 0; element_table[count].name != NULL; count++) {
+				FWK_HOST_PRINT("[FWK] get element name %s\n", element_table[count].name);
+
             continue;
+		}
 
         module_ctx->element_count = count;
     }
 
+	FWK_HOST_PRINT("[FWK] init module\n");
     status = module->init(module_ctx->id, module_ctx->element_count,
                           module_config->data);
     if (!fwk_expect(status == FWK_SUCCESS)) {
@@ -194,6 +201,7 @@ static int init_module(struct fwk_module_ctx *module_ctx,
         return status;
     }
 
+	FWK_HOST_PRINT("[FWK] init element\n");
     if (module_ctx->element_count > 0) {
         status = init_elements(module_ctx, element_table);
         if (status != FWK_SUCCESS) {
@@ -202,6 +210,7 @@ static int init_module(struct fwk_module_ctx *module_ctx,
         }
     }
 
+	FWK_HOST_PRINT("[FWK] init post\n");
     if (module->post_init != NULL) {
         status = module->post_init(module_ctx->id);
         if (!fwk_expect(status == FWK_SUCCESS)) {
@@ -251,6 +260,7 @@ static int bind_elements(struct fwk_module_ctx *module_ctx,
     int status;
     const struct fwk_module *module;
     unsigned int element_idx;
+	FWK_HOST_PRINT("[FWK] bind_elements id %04x \n", module_ctx->id.value);
 
     module = module_ctx->desc;
 
@@ -278,6 +288,7 @@ static int bind_module(struct fwk_module_ctx *module_ctx,
 {
     int status;
     const struct fwk_module *module;
+	FWK_HOST_PRINT("[FWK] bind_module id %04x \n", module_ctx->id.value);
 
     module = module_ctx->desc;
     if (module->bind == NULL) {
@@ -394,11 +405,14 @@ int __fwk_module_init(void)
     if (status != FWK_SUCCESS)
         return status;
 
+	FWK_HOST_PRINT("init_modules %s\n", __func__);
+
     ctx.stage = MODULE_STAGE_INITIALIZE;
     status = init_modules();
     if (status != FWK_SUCCESS)
         return status;
 
+	FWK_HOST_PRINT("bind_modules %s\n", __func__);
     ctx.stage = MODULE_STAGE_BIND;
     for (bind_round = 0; bind_round <= BIND_ROUND_MAX; bind_round++) {
         status = bind_modules(bind_round);
@@ -406,12 +420,13 @@ int __fwk_module_init(void)
             return status;
     }
 
-    #ifdef BUILD_HAS_NOTIFICATION
+#ifdef BUILD_HAS_NOTIFICATION
     status = __fwk_notification_init(NOTIFICATION_COUNT);
     if (status != FWK_SUCCESS)
         return status;
-    #endif
+#endif
 
+	FWK_HOST_PRINT("start_modules %s\n", __func__);
     ctx.stage = MODULE_STAGE_START;
     status = start_modules();
     if (status != FWK_SUCCESS)
@@ -419,7 +434,10 @@ int __fwk_module_init(void)
 
     ctx.initialized = true;
 
+#ifndef BUILD_OPTEE
+	// TODO need to find a better define
     __fwk_thread_run();
+#endif
 
     return FWK_SUCCESS;
 }

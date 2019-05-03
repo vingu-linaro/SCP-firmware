@@ -24,9 +24,18 @@
 #define FWK_HOST_PRINT printf
 
 #else
-#define FWK_HOST_PRINT(...) \
-    do { \
-    } while (0)
+
+#define __printf(a, b)	__attribute__((format(printf, a, b)))
+
+/* Internal functions used by the macros below */
+void trace_printf(const char *func, int line, int level, bool level_ok,
+		  const char *fmt, ...) __printf(5, 6);
+
+#define trace_printf_helper(...) \
+	trace_printf(__func__, __LINE__, (3), (true), __VA_ARGS__)
+
+#define FWK_HOST_PRINT trace_printf_helper
+
 #endif
 
 #endif /* FWK_HOST_H */

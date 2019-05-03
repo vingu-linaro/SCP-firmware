@@ -21,6 +21,7 @@
 #include <mod_log.h>
 #include <mod_power_domain.h>
 #include <mod_scmi.h>
+#include <fwk_host.h>
 
 struct scmi_pd_ctx {
     /* Number of power domains */
@@ -434,6 +435,7 @@ static int scmi_pd_power_state_get_handler(fwk_id_t service_id,
         goto exit;
     }
 
+	FWK_HOST_PRINT("[SCMI] scmi_pd_power_state_get_handler pd id %04x\n", pd_id.value);
     status = scmi_pd_ctx.pd_api->get_domain_type(pd_id, &pd_type);
     if (status != FWK_SUCCESS)
         goto exit;
@@ -487,7 +489,9 @@ static int scmi_pd_get_scmi_protocol_id(fwk_id_t protocol_id,
 {
     int status;
 
-    status = fwk_module_check_call(protocol_id);
+	FWK_HOST_PRINT("[SCMI] scmi_pd_get_scmi_protocol_id id %04x\n", protocol_id.value);
+
+	status = fwk_module_check_call(protocol_id);
     if (status != FWK_SUCCESS)
         return status;
 
@@ -502,7 +506,9 @@ static int scmi_pd_message_handler(fwk_id_t protocol_id, fwk_id_t service_id,
     int status;
     int32_t return_value;
 
-    status = fwk_module_check_call(protocol_id);
+	FWK_HOST_PRINT("[SCMI] scmi_pd_message_handler id %04x service %0x4 size %lu msg %u\n", protocol_id.value, service_id.value, payload_size, message_id);
+
+	status = fwk_module_check_call(protocol_id);
     if (status != FWK_SUCCESS)
         return status;
 
@@ -541,7 +547,9 @@ static struct mod_scmi_to_protocol_api scmi_pd_mod_scmi_to_protocol_api = {
 static int scmi_pd_init(fwk_id_t module_id, unsigned int element_count,
                         const void *unused)
 {
-    if (element_count != 0)
+	FWK_HOST_PRINT("[SCMI] scmi_pd_init id %04x count %u\n", module_id.value, element_count);
+
+	if (element_count != 0)
         return FWK_E_SUPPORT;
 
     scmi_pd_ctx.domain_count = fwk_module_get_element_count(
@@ -561,6 +569,8 @@ static int scmi_pd_init(fwk_id_t module_id, unsigned int element_count,
 static int scmi_pd_bind(fwk_id_t id, unsigned int round)
 {
     int status;
+
+	FWK_HOST_PRINT("[SCMI] scmi_pd_bind id %04x round %u\n", id.value, round);
 
     if (round == 1)
         return FWK_SUCCESS;
@@ -583,6 +593,7 @@ static int scmi_pd_bind(fwk_id_t id, unsigned int round)
 static int scmi_pd_process_bind_request(fwk_id_t source_id, fwk_id_t target_id,
                                         fwk_id_t api_id, const void **api)
 {
+	FWK_HOST_PRINT("[SCMI] scmi_pd_process_bind_request src %04x dst %04x api %04x\n", source_id.value, target_id.value, api_id.value);
     if (!fwk_id_is_equal(source_id, FWK_ID_MODULE(FWK_MODULE_IDX_SCMI)))
         return FWK_E_ACCESS;
 

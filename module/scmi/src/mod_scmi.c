@@ -17,7 +17,12 @@
 #include <fwk_mm.h>
 #include <fwk_module.h>
 #include <fwk_module_idx.h>
+#ifdef BUILD_HAS_MULTITHREADING
 #include <fwk_multi_thread.h>
+#else
+#include <fwk_thread.h>
+#endif
+#include <fwk_host.h>
 #include <internal/mod_scmi.h>
 #include <internal/scmi.h>
 #include <internal/scmi_base.h>
@@ -155,6 +160,7 @@ static int signal_message(fwk_id_t service_id)
         .source_id = FWK_ID_MODULE(FWK_MODULE_IDX_SCMI),
         .target_id = service_id,
     };
+	FWK_HOST_PRINT("[SCMI] service %08x event %08x src %08x dst %08x\n", service_id.value, event.id.value, event.source_id.value, event.source_id.value);
 
     return fwk_thread_put_event(&event);
 }
@@ -171,6 +177,8 @@ static int get_agent_id(fwk_id_t service_id, unsigned int *agent_id)
 {
     int status;
     struct scmi_service_ctx *ctx;
+
+	FWK_HOST_PRINT("[SCMI] get_agent_id id %04x\n", service_id.value);
 
     status = fwk_module_check_call(service_id);
     if (status != FWK_SUCCESS)
@@ -189,7 +197,9 @@ static int get_agent_id(fwk_id_t service_id, unsigned int *agent_id)
 static int get_agent_type(uint32_t scmi_agent_id,
                           enum scmi_agent_type *agent_type)
 {
-    if ((agent_type == NULL) ||
+	FWK_HOST_PRINT("[SCMI] get_agent_type id %04x\n", scmi_agent_id);
+
+	if ((agent_type == NULL) ||
         (scmi_agent_id > scmi_ctx.config->agent_count) ||
         (scmi_agent_id == SCMI_PLATFORM_ID))
         return FWK_E_PARAM;
@@ -203,6 +213,8 @@ static int get_max_payload_size(fwk_id_t service_id, size_t *size)
 {
     int status;
     struct scmi_service_ctx *ctx;
+
+	FWK_HOST_PRINT("[SCMI] get_max_payload_size id %04x\n", service_id.value);
 
     status = fwk_module_check_call(service_id);
     if (status != FWK_SUCCESS)
@@ -222,6 +234,8 @@ static int write_payload(fwk_id_t service_id, size_t offset,
     int status;
     const struct scmi_service_ctx *ctx;
 
+	FWK_HOST_PRINT("[SCMI] write_payload id %04x offset %lu size %lu\n", service_id.value, offset, size);
+
     status = fwk_module_check_call(service_id);
     if (status != FWK_SUCCESS)
         return status;
@@ -236,6 +250,8 @@ static void respond(fwk_id_t service_id, const void *payload, size_t size)
 {
     int status;
     const struct scmi_service_ctx *ctx;
+	FWK_HOST_PRINT("[SCMI] respond %04x size %lu \n", service_id.value, size);
+
 
     status = fwk_module_check_call(service_id);
     if (status != FWK_SUCCESS)
@@ -284,6 +300,7 @@ static int scmi_base_protocol_version_handler(fwk_id_t service_id,
         .version = SCMI_PROTOCOL_VERSION_BASE,
     };
 
+	FWK_HOST_PRINT("[SCMI] scmi_base_protocol_version_handler %x version %x \n", service_id.value, SCMI_PROTOCOL_VERSION_BASE);
     respond(service_id, &return_values, sizeof(return_values));
 
     return FWK_SUCCESS;
@@ -526,6 +543,8 @@ static int scmi_base_message_handler(fwk_id_t protocol_id, fwk_id_t service_id,
 {
     int32_t return_value;
 
+	FWK_HOST_PRINT("[SCMI] scmi_base_message_handler protocol %08x service %08x message %08x \n", protocol_id.value, service_id.value, message_id);
+
     static_assert(FWK_ARRAY_SIZE(base_handler_table) ==
                   FWK_ARRAY_SIZE(base_payload_size_table),
                   "[SCMI] Base protocol table sizes not consistent");
@@ -560,7 +579,9 @@ static int scmi_init(fwk_id_t module_id, unsigned int service_count,
     unsigned int agent_idx;
     const struct mod_scmi_agent *agent;
 
-    if (config == NULL)
+	FWK_HOST_PRINT("[SCMI] scmi_init id %04x count %u\n", module_id.value, service_count);
+
+	if (config == NULL)
         return FWK_E_PARAM;
 
     if ((config->agent_count == 0) ||
@@ -606,6 +627,8 @@ static int scmi_service_init(fwk_id_t service_id, unsigned int unused,
         (struct mod_scmi_service_config *)data;
     struct scmi_service_ctx *ctx;
 
+	FWK_HOST_PRINT("[SCMI] scmi_service_init id %04x \n", service_id.value);
+
     if ((config->scmi_agent_id == SCMI_PLATFORM_ID) ||
         (config->scmi_agent_id > scmi_ctx.config->agent_count))
         return FWK_E_PARAM;
@@ -613,7 +636,11 @@ static int scmi_service_init(fwk_id_t service_id, unsigned int unused,
     ctx = &scmi_ctx.service_ctx_table[fwk_id_get_element_idx(service_id)];
     ctx->config = config;
 
+#ifdef BUILD_HAS_MULTITHREADING
     return fwk_thread_create(service_id);
+#else
+    return FWK_SUCCESS;
+#endif
 }
 
 static int scmi_bind(fwk_id_t id, unsigned int round)
@@ -625,6 +652,8 @@ static int scmi_bind(fwk_id_t id, unsigned int round)
     struct scmi_protocol *protocol;
     struct mod_scmi_to_protocol_api *protocol_api = NULL;
     uint8_t scmi_protocol_id;
+
+	FWK_HOST_PRINT("[SCMI] scmi_bind id %04x round %u\n", id.value, round);
 
     if (round == 0) {
         if (fwk_id_is_type(id, FWK_ID_TYPE_MODULE)) {
@@ -692,13 +721,17 @@ static int scmi_process_bind_request(fwk_id_t source_id, fwk_id_t target_id,
     unsigned int api_idx;
     struct scmi_service_ctx *ctx;
 
+	FWK_HOST_PRINT("[SCMI] scmi_process_bind_request src %04x dst %04x api %04x\n", source_id.value, target_id.value, api_id.value);
+
     api_idx = fwk_id_get_api_idx(api_id);
+	FWK_HOST_PRINT("[SCMI] scmi_process_bind_request api idx %u\n", api_idx);
 
     switch (api_idx) {
     case MOD_SCMI_API_IDX_PROTOCOL:
         if (!fwk_id_is_type(target_id, FWK_ID_TYPE_MODULE))
             return FWK_E_SUPPORT;
 
+		FWK_HOST_PRINT("[SCMI] scmi_process_bind_request count %u max %u\n", scmi_ctx.protocol_count, scmi_ctx.config->protocol_count_max);
         if (scmi_ctx.protocol_count >= scmi_ctx.config->protocol_count_max)
             return FWK_E_NOMEM;
 
@@ -748,7 +781,6 @@ static int scmi_process_event(const struct fwk_event *event,
             "[SCMI] Unable to read message header\n");
         return status;
     }
-
     status = transport_api->get_payload(transport_id, &payload, &payload_size);
     if (status != FWK_SUCCESS) {
         scmi_ctx.log_api->log(MOD_LOG_GROUP_ERROR,
@@ -759,7 +791,10 @@ static int scmi_process_event(const struct fwk_event *event,
     ctx->scmi_protocol_id = read_protocol_id(message_header);
     ctx->scmi_message_id = read_message_id(message_header);
 
+	FWK_HOST_PRINT("[SCMI] scmi_process_event protocol id %08x message id %08x\n", ctx->scmi_protocol_id, ctx->scmi_message_id);
+
     protocol_idx = scmi_ctx.scmi_protocol_id_to_idx[ctx->scmi_protocol_id];
+	FWK_HOST_PRINT("[SCMI] scmi_process_event protocol_idx %08x\n", protocol_idx);
 
     if (protocol_idx == 0) {
         scmi_ctx.log_api->log(MOD_LOG_GROUP_ERROR,

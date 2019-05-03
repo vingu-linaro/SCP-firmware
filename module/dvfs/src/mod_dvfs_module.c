@@ -10,7 +10,9 @@
 #include <fwk_mm.h>
 #include <fwk_module.h>
 #include <fwk_module_idx.h>
+#if BUILD_HAS_NOTIFICATION
 #include <fwk_notification.h>
+#endif
 #include <mod_clock.h>
 #include <mod_dvfs_private.h>
 #include <mod_power_domain.h>
@@ -145,6 +147,7 @@ static int dvfs_process_bind_request(
 
 static int dvfs_start(fwk_id_t id)
 {
+#if BUILD_HAS_NOTIFICATION
     int status;
     const struct mod_dvfs_domain_ctx *ctx;
 
@@ -165,8 +168,12 @@ static int dvfs_start(fwk_id_t id)
         mod_clock_notification_id_state_change_pending,
         ctx->config->clock_id,
         id);
+#else
+	return FWK_SUCCESS;
+#endif
 }
 
+#if BUILD_HAS_NOTIFICATION
 static int dvfs_notify_system_state_transition_suspend(fwk_id_t domain_id)
 {
     struct mod_dvfs_domain_ctx *ctx =
@@ -215,6 +222,7 @@ static int dvfs_process_notification(
 
     return FWK_SUCCESS;
 }
+#endif
 
 struct mod_dvfs_domain_ctx *__mod_dvfs_get_valid_domain_ctx(fwk_id_t domain_id)
 {
@@ -234,7 +242,9 @@ const struct fwk_module module_dvfs = {
     .process_bind_request = dvfs_process_bind_request,
     .process_event = __mod_dvfs_process_event,
     .start = dvfs_start,
+#if BUILD_HAS_NOTIFICATION
     .process_notification = dvfs_process_notification,
-    .api_count = MOD_DVFS_API_IDX_COUNT,
+#endif
+	.api_count = MOD_DVFS_API_IDX_COUNT,
     .event_count = MOD_DVFS_EVENT_IDX_COUNT,
 };

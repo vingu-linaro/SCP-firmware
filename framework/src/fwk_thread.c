@@ -24,10 +24,10 @@
 
 static struct __fwk_thread_ctx ctx;
 
-#ifdef BUILD_HOST
+//#ifdef BUILD_HOST
 static const char err_msg_line[] = "[THR] Error %d in %s @%d\n";
 static const char err_msg_func[] = "[THR] Error %d in %s\n";
-#endif
+//#endif
 
 /*
  * Static functions
@@ -167,6 +167,19 @@ noreturn void __fwk_thread_run(void)
 
         while (fwk_list_is_empty(&ctx.isr_event_queue))
             continue;
+
+        process_isr();
+    }
+}
+
+void __fwk_run_event(void)
+{
+    for (;;) {
+        while (!fwk_list_is_empty(&ctx.event_queue))
+            process_next_event();
+
+        if (fwk_list_is_empty(&ctx.isr_event_queue))
+            return;
 
         process_isr();
     }
