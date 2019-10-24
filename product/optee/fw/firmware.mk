@@ -26,6 +26,10 @@ BS_FIRMWARE_MODULES := \
 	vppu \
 	power_domain \
 	scmi_power_domain \
+	mock_psu \
+	psu \
+	dvfs \
+	scmi_perf \
 	optee_console
 
 BS_FIRMWARE_SOURCES := \
@@ -37,5 +41,9 @@ BS_FIRMWARE_SOURCES := \
     config_scmi_clock.c \
 	config_ppu_v0.c \
 	config_power_domain.c \
+	config_mock_psu.c \
+	config_psu.c \
+	config_dvfs.c \
+	config_scmi_perf.c
 
 include $(BS_DIR)/lib-firmware.mk
