@@ -21,6 +21,7 @@
 #include <mod_log.h>
 #include <mod_power_domain.h>
 #include <mod_scmi.h>
+#include <fwk_host.h>
 
 struct scmi_pd_ctx {
     /* Number of power domains */
@@ -487,7 +488,7 @@ static int scmi_pd_get_scmi_protocol_id(fwk_id_t protocol_id,
 {
     int status;
 
-    status = fwk_module_check_call(protocol_id);
+	status = fwk_module_check_call(protocol_id);
     if (status != FWK_SUCCESS)
         return status;
 
@@ -502,7 +503,7 @@ static int scmi_pd_message_handler(fwk_id_t protocol_id, fwk_id_t service_id,
     int status;
     int32_t return_value;
 
-    status = fwk_module_check_call(protocol_id);
+	status = fwk_module_check_call(protocol_id);
     if (status != FWK_SUCCESS)
         return status;
 
@@ -541,7 +542,7 @@ static struct mod_scmi_to_protocol_api scmi_pd_mod_scmi_to_protocol_api = {
 static int scmi_pd_init(fwk_id_t module_id, unsigned int element_count,
                         const void *unused)
 {
-    if (element_count != 0)
+	if (element_count != 0)
         return FWK_E_SUPPORT;
 
     scmi_pd_ctx.domain_count = fwk_module_get_element_count(

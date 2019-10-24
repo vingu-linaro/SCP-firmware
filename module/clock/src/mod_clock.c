@@ -168,8 +168,8 @@ static int clock_init(fwk_id_t module_id, unsigned int element_count,
         return FWK_SUCCESS;
 
 #ifdef BUILD_HAS_NOTIFICATION
-    if (config == NULL)
-        return FWK_E_PARAM;
+//    if (config == NULL)
+//        return FWK_E_PARAM;
 #endif
 
     module_ctx.config = config;

@@ -12,7 +12,6 @@ BS_FIRMWARE_CPU := optee
 BS_FIRMWARE_HAS_MULTITHREADING := no
 BS_FIRMWARE_HAS_NOTIFICATION := no
 BS_FIRMWARE_MODULE_HEADERS_ONLY := \
-	power_domain \
 	css_clock \
 	pik_clock
 
@@ -24,7 +23,10 @@ BS_FIRMWARE_MODULES := \
 	vpll \
 	clock \
 	scmi_clock \
-    optee_console
+	vppu \
+	power_domain \
+	scmi_power_domain \
+	optee_console
 
 BS_FIRMWARE_SOURCES := \
     config_log.c \
@@ -32,6 +34,8 @@ BS_FIRMWARE_SOURCES := \
     config_scmi.c \
 	config_vpll.c \
 	config_clock.c \
-    config_scmi_clock.c
+    config_scmi_clock.c \
+	config_ppu_v0.c \
+	config_power_domain.c \
 
 include $(BS_DIR)/lib-firmware.mk
