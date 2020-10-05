@@ -18,7 +18,11 @@
 #include <fwk_mm.h>
 #include <fwk_module.h>
 #include <fwk_module_idx.h>
+#ifdef BUILD_HAS_MULTITHREADING
 #include <fwk_multi_thread.h>
+#else
+#include <fwk_thread.h>
+#endif
 #include <fwk_notification.h>
 #include <fwk_status.h>
 #include <fwk_thread.h>
@@ -582,6 +586,7 @@ static bool is_allowed_by_parent_and_children(struct pd_ctx *pd,
     return true;
 }
 
+#ifdef BUILD_HAS_NOTIFICATION
 /*
  * Check whether a power state pre-transition notification must be sent.
  *
@@ -603,6 +608,7 @@ static bool check_power_state_pre_transition_notification(struct pd_ctx *pd,
 
     return true;
 }
+#endif /* BUILD_HAS_NOTIFICATION */
 
 /*
  * Initiate a power state pre-transition notification if necessary.
@@ -615,6 +621,7 @@ static bool check_power_state_pre_transition_notification(struct pd_ctx *pd,
  */
 static bool initiate_power_state_pre_transition_notification(struct pd_ctx *pd)
 {
+#ifdef BUILD_HAS_NOTIFICATION
     unsigned int state;
     struct fwk_event notification_event = {
         .id = mod_pd_notification_id_power_state_pre_transition,
@@ -653,6 +660,9 @@ static bool initiate_power_state_pre_transition_notification(struct pd_ctx *pd)
 
     return (pd->power_state_pre_transition_notification_ctx.pending_responses
             != 0);
+#else
+	return false;
+#endif
 }
 
 /*
@@ -727,8 +737,12 @@ static void respond(struct pd_ctx *pd, int resp_status)
     if (!pd->response.pending)
         return;
 
+#ifdef BUILD_HAS_NOTIFICATION
     status = fwk_thread_get_delayed_response(
         pd->id, pd->response.cookie, &resp_event);
+#else
+    status = FWK_E_PARAM;
+#endif
     pd->response.pending = false;
 
     if (status != FWK_SUCCESS)
@@ -892,10 +906,15 @@ static void process_set_state_request(
         return;
 
     if (pd_in_charge_of_response != NULL) {
+#ifdef BUILD_HAS_NOTIFICATION
         resp_event->is_delayed_response = true;
         resp_event->source_id = pd_in_charge_of_response->id;
         pd_in_charge_of_response->response.pending = true;
         pd_in_charge_of_response->response.cookie = resp_event->cookie;
+#else
+        resp_params->status = status;
+        resp_params->composite_state = composite_state;
+#endif
     } else {
         resp_params->status = status;
         resp_params->composite_state = composite_state;
@@ -1115,12 +1134,14 @@ static void process_power_state_transition_report(struct pd_ctx *pd,
 {
     unsigned int new_state = report_params->state;
     unsigned int previous_state;
+#ifdef BUILD_HAS_NOTIFICATION
     struct fwk_event notification_event = {
         .id = mod_pd_notification_id_power_state_transition,
         .response_requested = true,
         .source_id = FWK_ID_NONE
     };
     struct mod_pd_power_state_transition_notification_params *params;
+#endif
 
     if (new_state == pd->requested_state)
         respond(pd, FWK_SUCCESS);
@@ -1128,8 +1149,9 @@ static void process_power_state_transition_report(struct pd_ctx *pd,
     previous_state = pd->current_state;
     pd->current_state = new_state;
 
-    if (pd->power_state_transition_notification_ctx.pending_responses == 0 &&
-        pd->config->disable_state_transition_notifications == false) {
+#ifdef BUILD_HAS_NOTIFICATION
+   if (pd->power_state_transition_notification_ctx.pending_responses == 0 &&
+       pd->config->disable_state_transition_notifications == false) {
         params = (struct mod_pd_power_state_transition_notification_params *)
             notification_event.params;
         params->state = new_state;
@@ -1137,6 +1159,7 @@ static void process_power_state_transition_report(struct pd_ctx *pd,
         fwk_notification_notify(&notification_event,
             &pd->power_state_transition_notification_ctx.pending_responses);
     }
+#endif
 
     if ((mod_pd_ctx.system_suspend.last_core_off_ongoing) &&
         (pd == mod_pd_ctx.system_suspend.last_core_pd)) {
@@ -1146,6 +1169,7 @@ static void process_power_state_transition_report(struct pd_ctx *pd,
         return;
     }
 
+#ifdef BUILD_HAS_NOTIFICATION
     if (pd->parent == NULL) {
         /* this is the top pd (SYSTOP) */
         if (mod_pd_ctx.system_suspend.state != MOD_PD_STATE_ON) {
@@ -1169,6 +1193,7 @@ static void process_power_state_transition_report(struct pd_ctx *pd,
 
          return;
     }
+#endif
 
     if (is_deeper_state(new_state, previous_state))
         process_power_state_transition_report_deeper_state(pd);
@@ -1295,9 +1320,11 @@ void perform_shutdown(
      * be notified.
      */
     if (resp == NULL) {
+#ifdef BUILD_HAS_MULTITHREADING
         status = fwk_thread_get_delayed_response(fwk_module_id_power_domain,
             mod_pd_ctx.system_shutdown.cookie, &delayed_resp);
         fwk_assert(status == FWK_SUCCESS);
+#endif
 
         delayed_resp.source_id = fwk_module_id_power_domain;
 
@@ -1320,6 +1347,7 @@ void perform_shutdown(
 static bool check_and_notify_system_shutdown(
     enum mod_pd_system_shutdown system_shutdown)
 {
+#ifdef BUILD_HAS_NOTIFICATION
     struct mod_pd_pre_shutdown_notif_params *params;
 
     struct fwk_event notification = {
@@ -1336,6 +1364,9 @@ static bool check_and_notify_system_shutdown(
         &mod_pd_ctx.system_shutdown.notifications_count);
 
     return (mod_pd_ctx.system_shutdown.notifications_count != 0);
+#else
+	return 0;
+#endif
 }
 
 /*
@@ -1945,6 +1976,7 @@ static int pd_process_event(const struct fwk_event *event,
     }
 }
 
+#ifdef BUILD_HAS_NOTIFICATION
 static int process_pre_shutdown_notification_response(void)
 {
     if (mod_pd_ctx.system_shutdown.ongoing) {
@@ -2005,6 +2037,7 @@ static int process_power_state_pre_transition_notification_response(
 
     return FWK_SUCCESS;
 }
+
 static int process_power_state_transition_notification_response(
     struct pd_ctx *pd)
 {
@@ -2088,6 +2121,7 @@ static int pd_process_notification(const struct fwk_event *event,
         (struct mod_pd_power_state_pre_transition_notification_resp_params *)
         event->params);
 }
+#endif /* BUILD_HAS_NOTIFICATION */
 
 /* Module definition */
 const struct fwk_module module_power_domain = {
@@ -2105,5 +2139,7 @@ const struct fwk_module module_power_domain = {
     .start = pd_start,
     .process_bind_request = pd_process_bind_request,
     .process_event = pd_process_event,
+#ifdef BUILD_HAS_NOTIFICATION
     .process_notification = pd_process_notification
+#endif
 };
