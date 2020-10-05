@@ -14,49 +14,53 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+/*
+ * Variables for the mock functions
+ */
+
 static int global_enable(void)
 {
-    return FWK_E_SUPPORT;
+    return FWK_SUCCESS;
 }
 
 static int global_disable(void)
 {
-    return FWK_E_SUPPORT;
+    return FWK_SUCCESS;
 }
 
 static int is_enabled(unsigned int interrupt, bool *state)
 {
-    return FWK_E_SUPPORT;
+    return FWK_SUCCESS;
 }
 
 static int enable(unsigned int interrupt)
 {
-    return FWK_E_SUPPORT;
+    return FWK_SUCCESS;
 }
 
 static int disable(unsigned int interrupt)
 {
-    return FWK_E_SUPPORT;
+    return FWK_SUCCESS;
 }
 
 static int is_pending(unsigned int interrupt, bool *state)
 {
-    return FWK_E_SUPPORT;
+    return FWK_SUCCESS;
 }
 
 static int set_pending(unsigned int interrupt)
 {
-    return FWK_E_SUPPORT;
+    return FWK_SUCCESS;
 }
 
 static int clear_pending(unsigned int interrupt)
 {
-    return FWK_E_SUPPORT;
+    return FWK_SUCCESS;
 }
 
 static int set_isr_irq(unsigned int interrupt, void (*isr)(void))
 {
-    return FWK_E_SUPPORT;
+    return FWK_SUCCESS;
 }
 
 static int set_isr_irq_param(
@@ -64,27 +68,28 @@ static int set_isr_irq_param(
     void (*isr)(uintptr_t param),
     uintptr_t parameter)
 {
-    return FWK_E_SUPPORT;
+    return FWK_SUCCESS;
 }
 
 static int set_isr_nmi(void (*isr)(void))
 {
-    return FWK_E_SUPPORT;
+    return FWK_SUCCESS;
 }
 
 static int set_isr_nmi_param(void (*isr)(uintptr_t param), uintptr_t parameter)
 {
-    return FWK_E_SUPPORT;
+    return FWK_SUCCESS;
 }
 
 static int set_isr_fault(void (*isr)(void))
 {
-    return FWK_E_SUPPORT;
+    return FWK_SUCCESS;
 }
 
 static int get_current(unsigned int *interrupt)
 {
-    return FWK_E_SUPPORT;
+	/* No Pending interrupt */
+	return FWK_E_STATE;
 }
 
 static const struct fwk_arch_interrupt_driver driver = {
