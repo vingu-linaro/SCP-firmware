@@ -970,6 +970,7 @@ exit:
     return FWK_SUCCESS;
 }
 
+#if BUILD_HAS_MOD_TIMER
 /*
  * Fast Channel Polling
  */
@@ -1010,6 +1011,7 @@ static void fast_channel_callback(uintptr_t param)
         }
     }
 }
+#endif
 
 #endif
 
@@ -1438,6 +1440,7 @@ static int scmi_perf_start(fwk_id_t id)
      */
     if (!fwk_id_is_equal(scmi_perf_ctx.config->fast_channels_alarm_id,
         FWK_ID_NONE)) {
+#if BUILD_HAS_MOD_TIMER
         if (scmi_perf_ctx.config->fast_channels_rate_limit <
             SCMI_PERF_FC_MIN_RATE_LIMIT)
             fc_interval_msecs = (uint32_t)SCMI_PERF_FC_MIN_RATE_LIMIT / 1000;
@@ -1448,6 +1451,7 @@ static int scmi_perf_start(fwk_id_t id)
             scmi_perf_ctx.config->fast_channels_alarm_id,
             fc_interval_msecs, MOD_TIMER_ALARM_TYPE_PERIODIC,
             fast_channel_callback, (uintptr_t)0);
+#endif
         if (status != FWK_SUCCESS)
             return status;
     }
