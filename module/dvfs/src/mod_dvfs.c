@@ -8,7 +8,9 @@
 #include <mod_clock.h>
 #include <mod_dvfs.h>
 #include <mod_psu.h>
+#if BUILD_HAS_MOD_TIMER // FIXME: #ifdef could be removed
 #include <mod_timer.h>
+#endif
 
 #include <fwk_assert.h>
 #include <fwk_event.h>
@@ -119,11 +121,15 @@ struct mod_dvfs_domain_ctx {
         /* Clock API */
         const struct mod_clock_api *clock;
 
+#if BUILD_HAS_MOD_TIMER
         /* Alarm API for pending requests */
         const struct mod_timer_alarm_api *alarm_api;
+#endif
 
+#ifdef BUILD_HAS_NOTIFICATION
         /* DVFS perf updates notification API */
         struct mod_dvfs_perf_updated_api *perf_updated_api;
+#endif
     } apis;
 
     /* Number of operating points */
@@ -334,6 +340,7 @@ static void dvfs_flush_pending_request(struct mod_dvfs_domain_ctx *ctx)
     ctx->pending_request = (struct mod_dvfs_request){ 0 };
 }
 
+#if BUILD_HAS_MOD_TIMER
 static void alarm_callback(uintptr_t param)
 {
     struct mod_dvfs_domain_ctx *ctx = (struct mod_dvfs_domain_ctx *)param;
@@ -362,6 +369,7 @@ static int dvfs_handle_pending_request(struct mod_dvfs_domain_ctx *ctx)
         return FWK_SUCCESS;
 
     if (ctx->config->retry_ms > 0) {
+#if BUILD_HAS_MOD_TIMER
         status = ctx->apis.alarm_api->start(
             ctx->config->alarm_id,
             ctx->config->retry_ms,
@@ -370,6 +378,9 @@ static int dvfs_handle_pending_request(struct mod_dvfs_domain_ctx *ctx)
             (uintptr_t)ctx);
         if (status == FWK_SUCCESS)
             ctx->state = DVFS_DOMAIN_STATE_RETRY;
+#else
+        assert(0);
+#endif
     } else {
         /*
          * If this domain does not have a timeout configured we start
@@ -633,11 +644,13 @@ static int dvfs_set_level_limits(
 
     ctx->level_limits = *limits;
 
+#ifdef BUILD_HAS_NOTIFICATION
     /* notify the HAL that the limits have been updated */
     if (ctx->apis.perf_updated_api) {
         ctx->apis.perf_updated_api->notify_limits_updated(
             ctx->domain_id, cookie, limits->minimum, limits->maximum);
     }
+#endif
 
     if ((new_opp->level == ctx->current_opp.level) &&
         (new_opp->frequency == ctx->current_opp.frequency) &&
@@ -680,8 +693,10 @@ static void dvfs_complete_respond(
     struct fwk_event *resp_event,
     int req_status)
 {
+#ifdef BUILD_HAS_MULTITHREADING
     int status;
     struct fwk_event read_req_event;
+#endif
     struct mod_dvfs_params_response *resp_params;
     bool return_opp = false;
 
@@ -689,6 +704,7 @@ static void dvfs_complete_respond(
         return_opp = true;
 
     if (ctx->cookie != 0) {
+#ifdef BUILD_HAS_MULTITHREADING
         /*
          * The request was handled asynchronously, retrieve
          * the delayed_response and return it to the caller
@@ -705,6 +721,9 @@ static void dvfs_complete_respond(
             fwk_thread_put_event(&read_req_event);
         }
         ctx->cookie = 0;
+#else
+        assert(0);
+#endif
     } else if (resp_event != NULL) {
         /*
          * The request is being handled synchronously, return
@@ -747,12 +766,14 @@ static int dvfs_complete(
     }
 
     /* notify the HAL that the level has been updated */
+#ifdef BUILD_HAS_NOTIFICATION
     if ((req_status == FWK_SUCCESS) && (ctx->state != DVFS_DOMAIN_GET_OPP)) {
         if (ctx->apis.perf_updated_api) {
             ctx->apis.perf_updated_api->notify_level_updated(
                 ctx->domain_id, ctx->request.cookie, ctx->current_opp.level);
         }
     }
+#endif
 
     /*
      * Now we need to start processing the pending request if any,
@@ -1250,6 +1271,7 @@ static int dvfs_bind_element(fwk_id_t domain_id, unsigned int round)
     if (status != FWK_SUCCESS)
         return FWK_E_PANIC;
 
+#ifdef BUILD_HAS_NOTIFICATION
     /* Bind to a notification module if required */
     if (!(fwk_id_is_equal(ctx->config->notification_id, FWK_ID_NONE))) {
         status = fwk_module_bind(
@@ -1259,15 +1281,20 @@ static int dvfs_bind_element(fwk_id_t domain_id, unsigned int round)
         if (status != FWK_SUCCESS)
             return FWK_E_PANIC;
     }
+#endif
 
     /* Bind to the alarm HAL if required */
     if (ctx->config->retry_ms > 0) {
+#if BUILD_HAS_MOD_TIMER
         status = fwk_module_bind(
             ctx->config->alarm_id,
             MOD_TIMER_API_ID_ALARM,
             &ctx->apis.alarm_api);
         if (status != FWK_SUCCESS)
             return FWK_E_PANIC;
+#else
+        return FWK_E_PANIC;
+#endif
     }
 
     return FWK_SUCCESS;
