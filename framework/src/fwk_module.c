@@ -11,6 +11,7 @@
 #include <internal/fwk_id.h>
 #include <internal/fwk_module.h>
 #include <internal/fwk_thread.h>
+#include <internal/fwk_single_thread.h>
 
 #include <fwk_assert.h>
 #include <fwk_cli_dbg.h>
@@ -172,6 +173,8 @@ static void fwk_module_init_elements(struct fwk_module_ctx *ctx)
     int status;
 
     const struct fwk_module *desc = ctx->desc;
+    struct fwk_element_ctx *element_ctx;
+    fwk_id_t none_id = FWK_ID_NONE_INIT;
 
     if (!fwk_expect(desc->element_init != NULL))
         fwk_trap();
@@ -189,6 +192,16 @@ static void fwk_module_init_elements(struct fwk_module_ctx *ctx)
 
         status = desc->element_init(
             element_id, element->sub_element_count, element->data);
+
+        if (status == FWK_PENDING) {
+            element_ctx = fwk_module_get_element_ctx(element_id);
+            element_ctx->thread_ctx = fwk_mm_calloc(1, sizeof(struct __fwk_thread_ctx));
+            FWK_LOG_INFO("[FWK] Init thread ctx %08x @ %08x\n", element_id.value, element_ctx->thread_ctx);
+            fwk_set_thread_ctx(element_id);
+            status = __fwk_thread_init(FWK_MODULE_EVENT_COUNT, element_id);
+            fwk_set_thread_ctx(none_id);
+        }
+
         if (!fwk_expect(status == FWK_SUCCESS))
             fwk_trap();
 
@@ -394,6 +407,7 @@ int fwk_module_start(void)
 {
     int status;
     unsigned int bind_round;
+    fwk_id_t none_id = FWK_ID_NONE_INIT;
 
     if (fwk_module_ctx.initialized) {
         FWK_LOG_CRIT(fwk_module_err_msg_func, FWK_E_STATE, __func__);
@@ -402,7 +416,8 @@ int fwk_module_start(void)
 
     CLI_DEBUGGER();
 
-    status = __fwk_thread_init(FWK_MODULE_EVENT_COUNT);
+    fwk_set_thread_ctx(none_id);
+    status = __fwk_thread_init(FWK_MODULE_EVENT_COUNT, none_id);
     if (status != FWK_SUCCESS)
         return status;
 

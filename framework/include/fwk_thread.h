@@ -94,6 +94,9 @@ int fwk_thread_get_delayed_response(
     uint32_t cookie,
     struct fwk_event *event);
 
+
+int fwk_thread_put_event_and_wait(struct fwk_event *event,
+                                   struct fwk_event *resp_event);
 /*!
  * \brief Check if the list of delayed response events of a given module or
  *     element is empty.
@@ -144,6 +147,7 @@ int fwk_thread_get_first_delayed_response(fwk_id_t id, struct fwk_event *event);
 /*!
  * \}
  */
+void fwk_set_thread_ctx(fwk_id_t id);
 
 /*!
  * \}
