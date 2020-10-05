@@ -8,6 +8,7 @@
  *     SCMI power domain management protocol support.
  */
 
+#include <internal/scmi.h>
 #include <internal/scmi_power_domain.h>
 
 #include <mod_power_domain.h>
@@ -556,7 +557,6 @@ static int scmi_pd_power_state_set_handler(fwk_id_t service_id,
         status = scmi_pd_ctx.pd_api->set_state(pd_id, power_state);
         break;
 
-
     case MOD_PD_TYPE_DEVICE_DEBUG:
 #ifdef BUILD_HAS_MOD_DEBUG
         if (!is_sync) {
@@ -739,6 +739,7 @@ static int scmi_pd_power_state_get_handler(fwk_id_t service_id,
 
         return FWK_SUCCESS;
     #endif
+    /* FALLTHROUGH */
     case MOD_PD_TYPE_DEVICE:
 
         status = scmi_pd_ctx.pd_api->get_state(pd_id, &pd_power_state);
