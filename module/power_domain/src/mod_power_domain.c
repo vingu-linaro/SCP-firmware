@@ -16,6 +16,7 @@
 #include <fwk_log.h>
 #include <fwk_macros.h>
 #include <fwk_mm.h>
+#include <fwk_log.h>
 #include <fwk_module.h>
 #include <fwk_module_idx.h>
 #ifdef BUILD_HAS_MULTITHREADING
@@ -696,7 +697,7 @@ static int initiate_power_state_transition(struct pd_ctx *pd)
 #if FWK_LOG_LEVEL <= FWK_LOG_LEVEL_TRACE
     if (status == FWK_SUCCESS) {
         FWK_LOG_TRACE(
-            "[PD] Transition of %s from <%s> to <%s> succeeded",
+            "[PD] Transition of %s from <%s> to <%s> succeeded\n",
             fwk_module_get_name(pd->id),
             get_state_name(pd, pd->state_requested_to_driver),
             get_state_name(pd, state));
@@ -751,6 +752,8 @@ static void respond(struct pd_ctx *pd, int resp_status)
     resp_params->composite_state = req_params->composite_state;
     resp_params->status = resp_status;
 
+//    FWK_LOG_INFO("[PD] respond %08x src %08x dst %08x\n", resp_event.id.value, resp_event.source_id.value, resp_event.target_id.value);
+
     fwk_thread_put_event(&resp_event);
 }
 
@@ -786,6 +789,7 @@ static void process_set_state_request(
     mod_pd_ctx.system_suspend.last_core_off_ongoing = false;
 
     composite_state = req_params->composite_state;
+    FWK_LOG_INFO("[PD] process_set_state_request pd id %04x composite %x\n", lowest_pd->id.value, composite_state);
     up = is_upwards_transition_propagation(lowest_pd, composite_state);
 
     /*
@@ -1033,6 +1037,7 @@ static void process_get_state_request(struct pd_ctx *pd,
 
         resp_params->state = composite_state;
     }
+	FWK_LOG_INFO("[PD] process_get_state_request composite %x\n", composite_state);
 
     resp_params->status = FWK_SUCCESS;
 }
@@ -1061,6 +1066,7 @@ static void process_reset_request(struct pd_ctx *pd,
             (child->current_state != MOD_PD_STATE_OFF))
             goto exit;
     }
+	FWK_LOG_INFO("[PD] process_reset_request\n");
 
     status = pd->driver_api->reset(pd->driver_id);
 
@@ -1525,6 +1531,8 @@ static int pd_get_state(fwk_id_t pd_id, unsigned int *state)
     struct pd_get_state_response *resp_params =
         (struct pd_get_state_response *)(&resp.params);
 
+	FWK_LOG_INFO("[PD] pd_get_state id %04x\n", pd_id.value);
+
     if (state == NULL)
         return FWK_E_PARAM;
 
@@ -1628,6 +1636,7 @@ static int pd_reset_async(fwk_id_t pd_id, bool response_requested)
         .target_id = pd_id,
         .response_requested = response_requested,
     };
+		FWK_LOG_INFO("[PD] reset async %08x src %08x dst %08x\n", req.id.value, req.source_id.value, req.target_id.value);
 
     return fwk_thread_put_event(&req);
 }
@@ -1646,6 +1655,7 @@ static int report_power_state_transition(const struct pd_ctx *pd,
                            PD_EVENT_IDX_REPORT_POWER_STATE_TRANSITION)
     };
     report_params->state = state;
+    FWK_LOG_INFO("[PD] report_power_state_transition %08x src %08x dst %08x\n", report.id.value, report.source_id.value, report.target_id.value);
 
     return fwk_thread_put_event(&report);
 }
@@ -1704,6 +1714,7 @@ static const struct mod_pd_driver_input_api pd_driver_input_api = {
 static int pd_init(fwk_id_t module_id, unsigned int dev_count,
                    const void *data)
 {
+    FWK_LOG_INFO("[PD] pd_init id %04x count %u\n", module_id.value, dev_count);
     if ((data == NULL) || (dev_count == 0))
         return FWK_E_PARAM;
 
@@ -1728,6 +1739,7 @@ static int pd_power_domain_init(fwk_id_t pd_id, unsigned int unused,
         (const struct mod_power_domain_element_config *)config;
     struct pd_ctx *pd;
     unsigned int state;
+    FWK_LOG_INFO("[PD] pd_power_domain_init id %04x \n", pd_id.value);
 
     pd = &mod_pd_ctx.pd_ctx_table[fwk_id_get_element_idx(pd_id)];
 
@@ -1791,6 +1803,7 @@ static int pd_bind(fwk_id_t id, unsigned int round)
     struct pd_ctx *pd;
     const struct mod_power_domain_element_config *config;
     struct mod_pd_driver_api *driver_api = NULL;
+    FWK_LOG_INFO("[PD] pd_bind id %04x round %u\n", id.value, round);
 
     /* Nothing to do but during the first round of calls */
     if (round != 0)
@@ -1801,10 +1814,12 @@ static int pd_bind(fwk_id_t id, unsigned int round)
 
     pd = &mod_pd_ctx.pd_ctx_table[fwk_id_get_element_idx(id)];
     config = pd->config;
+//    FWK_LOG_INFO("[PD] pd_bind id %04x api %u\n", config->driver_id.value, config->api_id.value);
 
     status = fwk_module_bind(config->driver_id, config->api_id, &driver_api);
     if (status != FWK_SUCCESS)
         return status;
+//    FWK_LOG_INFO("[PD] pd_bind id %04x type %u\n", config->driver_id.value, config->attributes.pd_type);
 
     pd->driver_id = config->driver_id;
     if ((driver_api->set_state == NULL) ||
@@ -1825,6 +1840,7 @@ static int pd_start(fwk_id_t id)
     int index;
     struct pd_ctx *pd;
     unsigned int state;
+    FWK_LOG_INFO("[PD] pd_start id %04x\n", id.value);
 
     /* Nothing to do for elements */
     if (fwk_module_is_valid_element_id(id))
@@ -1845,6 +1861,7 @@ static int pd_start(fwk_id_t id)
         if ((pd->parent != NULL) &&
             (pd->parent->requested_state == MOD_PD_STATE_OFF))
             continue;
+	FWK_LOG_INFO("[PD] pd_start null parent id %04x\n", id.value);
 
         /* Get the current power state of the power domain from its driver. */
         status = pd->driver_api->get_state(pd->driver_id, &state);
@@ -1920,6 +1937,7 @@ static int pd_process_event(const struct fwk_event *event,
                             struct fwk_event *resp)
 {
     struct pd_ctx *pd = NULL;
+    FWK_LOG_INFO("[PD] pd_process_event event %x\n", event->id.value);
 
     if (fwk_id_is_type(event->target_id, FWK_ID_TYPE_ELEMENT))
         pd = &mod_pd_ctx.pd_ctx_table[fwk_id_get_element_idx(event->target_id)];
@@ -1928,16 +1946,20 @@ static int pd_process_event(const struct fwk_event *event,
     case MOD_PD_PUBLIC_EVENT_IDX_SET_STATE:
         fwk_assert(pd != NULL);
 
+	FWK_LOG_INFO("[PD] pd_process_event before set %d\n", ((struct pd_set_state_response *)(resp->params))->status);
         process_set_state_request(pd, event, resp);
+	FWK_LOG_INFO("[PD] pd_process_event after set %d\n", ((struct pd_set_state_response *)(resp->params))->status);
 
         return FWK_SUCCESS;
 
     case MOD_PD_PUBLIC_EVENT_IDX_GET_STATE:
         fwk_assert(pd != NULL);
 
+	FWK_LOG_INFO("[PD] pd_process_event before get %d\n", ((struct pd_set_state_response *)(resp->params))->status);
         process_get_state_request(pd,
             (struct pd_get_state_request *)event->params,
             (struct pd_get_state_response *)resp->params);
+	FWK_LOG_INFO("[PD] pd_process_event after get %d\n", ((struct pd_set_state_response *)(resp->params))->status);
 
         return FWK_SUCCESS;
 

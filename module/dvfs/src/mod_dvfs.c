@@ -18,6 +18,7 @@
 #include <fwk_interrupt.h>
 #include <fwk_log.h>
 #include <fwk_mm.h>
+#include <fwk_log.h>
 #include <fwk_module.h>
 #include <fwk_module_idx.h>
 #include <fwk_signal.h>
@@ -294,6 +295,7 @@ static int put_event_request(
         req.source_id = ctx->domain_id;
 
     ctx->state = state;
+//    FWK_LOG_INFO("[DVFS] put event request %08x src %08x dst %08x\n", req.id.value, req.source_id.value, req.target_id.value);
 
     return fwk_thread_put_event(&req);
 }
@@ -356,10 +358,11 @@ static void alarm_callback(uintptr_t param)
             .id = mod_dvfs_event_id_retry,
             .response_requested = ctx->pending_request.response_required,
         };
-
+//    FWK_LOG_INFO("[DVFS] alarm callback %08x src %08x dst %08x\n", req.id.value, req.source_id.value, req.target_id.value);
         fwk_thread_put_event(&req);
     }
 }
+#endif
 
 static int dvfs_handle_pending_request(struct mod_dvfs_domain_ctx *ctx)
 {
@@ -630,6 +633,7 @@ static int dvfs_set_level_limits(
     struct mod_dvfs_domain_ctx *ctx;
     const struct mod_dvfs_opp *new_opp;
     unsigned int interrupt;
+//    FWK_LOG_INFO("[DVFS] dvfs_set_level_limits id %d\n", domain_id);
 
     ctx = get_domain_ctx(domain_id);
     if (ctx == NULL)
@@ -718,6 +722,7 @@ static void dvfs_complete_respond(
             resp_params->status = req_status;
             if (return_opp)
                 resp_params->performance_level = ctx->current_opp.level;
+//	    FWK_LOG_INFO("[DVFS] complete respond %08x src %08x dst %08x\n", read_req_event.id.value, read_req_event.source_id.value, read_req_event.target_id.value);
             fwk_thread_put_event(&read_req_event);
         }
         ctx->cookie = 0;
@@ -742,6 +747,7 @@ static int dvfs_complete(
     int req_status)
 {
     int status = req_status;
+//    FWK_LOG_INFO("[DVFS] dvfs_complete state %d frq %d status %d\n", ctx->state, ctx->request.new_opp.frequency, status);
 
     if (ctx->request.response_required) {
         /*
@@ -804,7 +810,7 @@ static int dvfs_handle_set_opp(
     uint32_t voltage)
 {
     int status = FWK_SUCCESS;
-
+//    FWK_LOG_INFO("[DVFS] dvfs_handle_set_opp %d\n", ctx->request.new_opp.frequency);
     if (ctx->request.new_opp.voltage > voltage) {
         /*
          * Current < request, increase voltage then set frequency
@@ -1071,6 +1077,8 @@ static int mod_dvfs_process_event(
     struct mod_psu_driver_response *psu_response;
     uint32_t voltage;
 
+//    FWK_LOG_INFO("[DVFS] mod_dvfs_process_event %08x\n", event->id.value);
+
     ctx = get_domain_ctx(event->target_id);
     if (ctx == NULL)
         return FWK_E_PARAM;
@@ -1197,6 +1205,8 @@ static int dvfs_start(fwk_id_t id)
     struct mod_dvfs_opp sustained_opp;
     struct mod_dvfs_domain_ctx *ctx;
 
+    FWK_LOG_INFO("[DVFS] dvfs_start %04x\n", id.value);
+
     if (!fwk_id_is_type(id, FWK_ID_TYPE_ELEMENT))
         return FWK_SUCCESS;
 
@@ -1256,6 +1266,7 @@ static int dvfs_bind_element(fwk_id_t domain_id, unsigned int round)
 {
     int status;
     const struct mod_dvfs_domain_ctx *ctx = get_domain_ctx(domain_id);
+    FWK_LOG_INFO("[DVFS] dvfs_bind_element %08x\n", domain_id.value);
 
     /* Bind to the power supply module */
     status = fwk_module_bind(

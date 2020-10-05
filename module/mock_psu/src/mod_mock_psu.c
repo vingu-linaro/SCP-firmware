@@ -12,6 +12,7 @@
 #include <fwk_assert.h>
 #include <fwk_id.h>
 #include <fwk_mm.h>
+#include <fwk_log.h>
 #include <fwk_module.h>
 #include <fwk_module_idx.h>
 #include <fwk_status.h>
@@ -370,6 +371,8 @@ static int mod_mock_psu_process_bind_request(
     const void **api)
 {
     const struct mod_mock_psu_element_cfg *cfg;
+
+	FWK_LOG_INFO("[MOCKPSU] mod_mock_psu_process_bind_request src %04x dst %04x api %04x\n", source_id.value, target_id.value, api_id.value);
 
     if (!fwk_id_is_type(target_id, FWK_ID_TYPE_ELEMENT))
         return FWK_E_ACCESS;

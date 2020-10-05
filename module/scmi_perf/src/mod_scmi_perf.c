@@ -25,6 +25,7 @@
 #include <fwk_event.h>
 #include <fwk_id.h>
 #include <fwk_macros.h>
+#include <fwk_log.h>
 #include <fwk_mm.h>
 #include <fwk_module.h>
 #include <fwk_module_idx.h>
@@ -397,6 +398,7 @@ static int scmi_perf_domain_attributes_handler(fwk_id_t service_id,
         .sustained_freq = opp.frequency,
         .sustained_perf_level = opp.level,
     };
+    FWK_LOG_INFO("[SCMI PERF] scmi_perf_domain_attributes_handler domain %04x freq %u level %u\n", domain_id.value, return_values.sustained_freq, return_values.sustained_perf_level);
 
     /* Copy the domain name into the mailbox */
     strncpy((char *)return_values.name,
@@ -561,6 +563,8 @@ static int scmi_perf_limits_set_handler(fwk_id_t service_id,
         return_values.status = SCMI_SUCCESS;
         goto exit;
     }
+    FWK_LOG_INFO("[SCMI PERF] scmi_perf_limits_set_handler id %d min %d max %d\n", domain_id.value, range_min, range_max);
+
     status = scmi_perf_ctx.dvfs_api->set_level_limits(
         domain_id,
         agent_id,
@@ -623,6 +627,8 @@ static int scmi_perf_limits_get_handler(fwk_id_t service_id,
 
     evt_params = (struct scmi_perf_event_parameters *)event.params;
     evt_params->domain_id = domain_id;
+
+    FWK_LOG_INFO("[SCMI PERF] get limits %08x src %08x dst %08x\n", event.id.value, event.source_id.value, event.target_id.value);
 
     status = fwk_thread_put_event(&event);
     if (status != FWK_SUCCESS) {
@@ -742,6 +748,8 @@ static int scmi_perf_level_get_handler(fwk_id_t service_id,
     evt_params = (struct scmi_perf_event_parameters *)event.params;
     evt_params->domain_id = FWK_ID_ELEMENT(FWK_MODULE_IDX_DVFS,
         parameters->domain_id);
+
+    FWK_LOG_INFO("[SCMI PERF] get level %08x src %08x dst %08x\n", event.id.value, event.source_id.value, event.target_id.value);
 
     status = fwk_thread_put_event(&event);
     if (status != FWK_SUCCESS) {
@@ -1198,6 +1206,7 @@ static void scmi_perf_notify_level_updated(
 #endif
 
     idx = fwk_id_get_element_idx(domain_id);
+    FWK_LOG_INFO("[SCMI PERF] scmi_perf_notify_level_updated id %d level %d\n", idx, level);
 
 #ifdef BUILD_HAS_STATISTICS
     status = scmi_perf_ctx.dvfs_api->get_level_id(domain_id, level, &level_id);
@@ -1243,6 +1252,8 @@ static int scmi_perf_init(fwk_id_t module_id, unsigned int element_count,
     int i;
     const struct mod_scmi_perf_config *config =
         (const struct mod_scmi_perf_config *)data;
+
+    FWK_LOG_INFO("[SCMI PERF] scmi_perf_init id %04x count %u\n", module_id.value, element_count);
 
     if ((config == NULL) || (config->domains == NULL))
         return FWK_E_PARAM;
@@ -1300,6 +1311,8 @@ static int scmi_perf_bind(fwk_id_t id, unsigned int round)
 {
     int status;
 
+    FWK_LOG_INFO("[SCMI PERF] scmi_perf_bind id %04x round %u\n", id.value, round);
+
     if (round == 1)
         return FWK_SUCCESS;
 
@@ -1356,6 +1369,8 @@ static int scmi_perf_bind(fwk_id_t id, unsigned int round)
 static int scmi_perf_process_bind_request(fwk_id_t source_id,
     fwk_id_t target_id, fwk_id_t api_id, const void **api)
 {
+    FWK_LOG_INFO("[SCMI PERF] scmi_perf_process_bind_request src %04x dst %04x api %04x\n", source_id.value, target_id.value, api_id.value);
+
     switch (fwk_id_get_api_idx(api_id)) {
     case MOD_SCMI_PERF_PROTOCOL_API:
         *api = &scmi_perf_mod_scmi_to_protocol_api;
@@ -1590,6 +1605,8 @@ static int process_response_event(const struct fwk_event *event)
 static int scmi_perf_process_event(const struct fwk_event *event,
                                     struct fwk_event *resp_event)
 {
+    FWK_LOG_INFO("[SCMI PERF] scmi_perf_process_event %08x\n", event->id.value);
+
     /* Request events from SCMI */
     if (fwk_id_get_module_idx(event->source_id) ==
         fwk_id_get_module_idx(fwk_module_id_scmi))

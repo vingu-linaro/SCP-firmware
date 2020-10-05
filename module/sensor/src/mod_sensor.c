@@ -13,6 +13,7 @@
 #include <fwk_assert.h>
 #include <fwk_event.h>
 #include <fwk_id.h>
+#include <fwk_log.h>
 #include <fwk_mm.h>
 #include <fwk_module.h>
 #include <fwk_module_idx.h>
@@ -72,6 +73,8 @@ static bool trip_point_evaluate(
     default:
         break;
     }
+
+    FWK_LOG_INFO("[SENSOR] trip_point_evaluate value %lu trigger %d threshold %lu\n", value, trigger, threshold);
     ctx->above_threshold = new_above_threshold;
     return trigger;
 }
@@ -82,6 +85,7 @@ static void trip_point_process(fwk_id_t id, uint64_t value)
 {
     struct sensor_dev_ctx *ctx;
     unsigned int i;
+    FWK_LOG_INFO("[SENSOR] trip_point_process id %08x value %lu\n", id.value, value);
 
     fwk_check(!fwk_id_is_equal(id, FWK_ID_NONE));
     ctx = ctx_table + fwk_id_get_element_idx(id);
@@ -115,6 +119,7 @@ static int get_value(fwk_id_t id, uint64_t *value)
         return FWK_E_BUSY;
 
     status = ctx->driver_api->get_value(ctx->config->driver_id, value);
+	FWK_LOG_INFO("[SENSOR] get_value id %08x value %lu\n", id.value, *value);
     if (status == FWK_PENDING) {
         req = (struct fwk_event) {
             .target_id = id,

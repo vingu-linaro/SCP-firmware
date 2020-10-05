@@ -14,6 +14,7 @@
 #include <fwk_event.h>
 #include <fwk_id.h>
 #include <fwk_mm.h>
+#include <fwk_log.h>
 #include <fwk_module.h>
 #include <fwk_notification.h>
 #include <fwk_status.h>
@@ -86,6 +87,8 @@ static int process_response_event(const struct fwk_event *event)
     resp_params->value = event_params->value;
     ctx->is_request_ongoing = false;
 
+//	FWK_LOG_INFO("[CLOCK] process response event %08x src %08x dst %08x\n", resp_event.id.value, resp_event.source_id.value, resp_event.target_id.value);
+
     return fwk_thread_put_event(&resp_event);
 }
 #endif /* BUILD_HAS_NOTIFICATION */
@@ -116,6 +119,8 @@ static int create_async_request(
         .id = event_id,
         .response_requested = true,
     };
+
+//    FWK_LOG_INFO("[CLOCK] create async event %08x src %08x dst %08x\n", request_event.id.value, request_event.source_id.value, request_event.target_id.value);
 
     status = fwk_thread_put_event(&request_event);
     if (status != FWK_SUCCESS)
@@ -166,6 +171,8 @@ void request_complete(fwk_id_t dev_id,
         event_params->value = response->value;
     } else
         event_params->status = FWK_E_PARAM;
+
+//    FWK_LOG_INFO("[CLOCK] request complete event %08x src %08x dst %08x\n", event.id.value, event.source_id.value, event.target_id.value);
 
     status = fwk_thread_put_event(&event);
     fwk_assert(status == FWK_SUCCESS);
@@ -322,6 +329,8 @@ static int clock_init(fwk_id_t module_id, unsigned int element_count,
 {
     const struct mod_clock_config *config = data;
 
+    FWK_LOG_INFO("[CLOCK] clock_init id %04x count %u\n", module_id.value, element_count);
+
     if (element_count == 0)
         return FWK_SUCCESS;
 
@@ -342,6 +351,8 @@ static int clock_dev_init(fwk_id_t element_id, unsigned int sub_element_count,
     struct clock_dev_ctx *ctx;
     const struct mod_clock_dev_config *dev_config = data;
 
+    FWK_LOG_INFO("[CLOCK] clock_dev_init id %04x sub_element %u\n", element_id.value, sub_element_count);
+
     ctx = &module_ctx.dev_ctx_table[fwk_id_get_element_idx(element_id)];
     ctx->config = dev_config;
 
@@ -351,6 +362,8 @@ static int clock_dev_init(fwk_id_t element_id, unsigned int sub_element_count,
 static int clock_bind(fwk_id_t id, unsigned int round)
 {
     struct clock_dev_ctx *ctx;
+
+	FWK_LOG_INFO("[CLOCK] clock_bind id %04x round %u\n", id.value, round);
 
     if (round == 1)
         return FWK_SUCCESS;
@@ -373,6 +386,8 @@ static int clock_start(fwk_id_t id)
     int status;
 #endif
     struct clock_dev_ctx *ctx;
+
+	FWK_LOG_INFO("[CLOCK] clock_start id %04x\n", id.value);
 
     /* Nothing to be done at the module level */
     if (!fwk_id_is_type(id, FWK_ID_TYPE_ELEMENT))
@@ -603,6 +618,9 @@ static int clock_process_notification_response(
             (struct mod_pd_power_state_pre_transition_notification_resp_params
                  *)pd_response_event.params;
         pd_resp_params->status = ctx->transition_pending_response_status;
+
+//        FWK_LOG_INFO("[CLOCK] process notification response event %08x src %08x dst %08x\n", pd_response_event.id.value, pd_response_event.source_id.value, pd_response_event.target_id.value);
+
         fwk_thread_put_event(&pd_response_event);
     }
 
@@ -639,6 +657,7 @@ static int clock_process_notification(
 static int clock_process_event(const struct fwk_event *event,
                                struct fwk_event *resp_event)
 {
+
     if (!fwk_module_is_valid_element_id(event->target_id))
         return FWK_E_PARAM;
 

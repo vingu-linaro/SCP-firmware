@@ -491,6 +491,8 @@ static int scmi_pd_power_state_set_handler(fwk_id_t service_id,
     if (status != FWK_SUCCESS)
         goto exit;
 
+//    FWK_LOG_INFO("[SCMI PD] scmi_pd_power_state_set_handler service %d type %d agent %d\n", service_id, agent_id, agent_type);
+
     domain_idx = parameters->domain_id;
     if (domain_idx > UINT16_MAX) {
         return_values.status = SCMI_NOT_FOUND;
@@ -630,6 +632,7 @@ static int scmi_pd_power_state_set_handler(fwk_id_t service_id,
             return_values.status = SCMI_INVALID_PARAMETERS;
             goto exit;
         }
+//        FWK_LOG_INFO("[SCMI PD] scmi_pd_power_state_set_handler domain idx %d state %d agent %d\n", domain_idx, pd_power_state, agent_id);
 
         /* We are supporting SCMI notifications only for DEVICE type
          * power domains. Core and cluster changes power states very frequently
@@ -710,6 +713,7 @@ static int scmi_pd_power_state_get_handler(fwk_id_t service_id,
         goto exit;
     }
 
+//	FWK_LOG_INFO("[SCMI] scmi_pd_power_state_get_handler pd id %04x\n", pd_id.value);
     status = scmi_pd_ctx.pd_api->get_domain_type(pd_id, &pd_type);
     if (status != FWK_SUCCESS)
         goto exit;
@@ -789,6 +793,7 @@ static int scmi_pd_power_state_notify_handler(
 
     parameters = (const struct scmi_pd_power_state_notify_a2p *)payload;
     domain_idx = parameters->domain_id;
+    FWK_LOG_INFO("[SCMI] scmi_pd_power_state_notify_handler id %d service %0x4 idx %d\n", command_id, service_id.value, domain_idx);
     if (domain_idx >= scmi_pd_ctx.domain_count) {
         return_values.status = SCMI_NOT_FOUND;
         goto exit;
@@ -992,6 +997,8 @@ static int scmi_pd_message_handler(fwk_id_t protocol_id, fwk_id_t service_id,
     int status;
 #endif
 
+//    FWK_LOG_INFO("[SCMI] scmi_pd_message_handler id %04x service %0x4 size %lu msg %u\n", protocol_id.value, service_id.value, payload_size, message_id);
+
     static_assert(FWK_ARRAY_SIZE(handler_table) ==
         FWK_ARRAY_SIZE(payload_size_table),
         "[SCMI] Power domain management protocol table sizes not consistent");
@@ -1037,6 +1044,7 @@ static int scmi_pd_init(fwk_id_t module_id, unsigned int element_count,
 #ifdef BUILD_HAS_MOD_DEBUG
     struct mod_scmi_pd_config *config = (struct mod_scmi_pd_config *)data;
     #endif
+	FWK_LOG_INFO("[SCMI] scmi_pd_init id %04x count %u\n", module_id.value, element_count);
 
     if (element_count != 0)
         return FWK_E_SUPPORT;
@@ -1105,6 +1113,8 @@ static int scmi_pd_bind(fwk_id_t id, unsigned int round)
 {
     int status;
 
+	FWK_LOG_INFO("[SCMI] scmi_pd_bind id %04x round %u\n", id.value, round);
+
     if (round == 1)
         return FWK_SUCCESS;
 
@@ -1147,6 +1157,7 @@ static int scmi_pd_bind(fwk_id_t id, unsigned int round)
 static int scmi_pd_process_bind_request(fwk_id_t source_id, fwk_id_t target_id,
                                         fwk_id_t api_id, const void **api)
 {
+	FWK_LOG_INFO("[SCMI] scmi_pd_process_bind_request src %04x dst %04x api %04x\n", source_id.value, target_id.value, api_id.value);
     if (!fwk_id_is_equal(source_id, FWK_ID_MODULE(FWK_MODULE_IDX_SCMI)))
         return FWK_E_ACCESS;
 

@@ -177,7 +177,7 @@ static int smt_respond(fwk_id_t channel_id, const void *payload, size_t size)
 {
     struct smt_channel_ctx *channel_ctx;
     struct mod_optee_smt_memory *memory;
-	FWK_LOG_INFO("[SMT] smt_respond id %08x payload %08x size %d\n", channel_id.value, payload, size);
+    FWK_LOG_INFO("[SMT] smt_respond id %08x payload %p size %d\n", channel_id.value, payload, (int)size);
 
     channel_ctx =
         &smt_ctx.channel_ctx_table[fwk_id_get_element_idx(channel_id)];
@@ -229,7 +229,7 @@ static int smt_transmit(fwk_id_t channel_id, uint32_t message_header,
 
     if (payload == NULL)
         return FWK_E_DATA;
-    FWK_LOG_TRACE("[SMT] smt_transmit id %08x payload %08x size %d\n", channel_id.value, payload, size);
+    FWK_LOG_TRACE("[SMT] smt_transmit id %08x payload %p size %lu\n", channel_id.value, payload, size);
 
     channel_ctx =
         &smt_ctx.channel_ctx_table[fwk_id_get_element_idx(channel_id)];
@@ -419,7 +419,7 @@ static int mailbox_init(fwk_id_t module_id, unsigned int element_count,
                         const void *data)
 {
     size_t sz = sizeof(*smt_ctx.channel_ctx_table);
-	FWK_LOG_INFO("[MBX] mailbox_init id %04x count %u\n", module_id.value, element_count);
+    FWK_LOG_INFO("[MBX] mailbox_init id %04x count %u\n", module_id.value, element_count);
 
     smt_ctx.channel_ctx_table = fwk_mm_calloc(element_count, sz);
     if (smt_ctx.channel_ctx_table == NULL) {

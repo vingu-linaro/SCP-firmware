@@ -12,6 +12,7 @@
 
 #include <fwk_element.h>
 #include <fwk_id.h>
+#include <fwk_log.h>
 #include <fwk_mm.h>
 #include <fwk_status.h>
 

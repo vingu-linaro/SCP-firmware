@@ -147,6 +147,10 @@ static int put_event(struct __fwk_thread_ctx *ctx,
     bool is_wakeup_event = false;
     int status;
 
+    FWK_LOG_INFO("[THR] Put event %08x src %08x dst %08x\n",
+		 event->id.value, event->source_id.value,
+		 event->target_id.value);
+
     if (event->is_delayed_response) {
 #ifdef BUILD_HAS_NOTIFICATION
         allocated_event = __fwk_thread_search_delayed_response(
@@ -595,7 +599,7 @@ int fwk_thread_put_event_and_wait(
 
 #if FWK_LOG_LEVEL <= FWK_LOG_LEVEL_TRACE
     FWK_LOG_TRACE(
-        "[FWK] deprecated put_event_and_wait (%s: %s -> %s)\n",
+        "[FWK] START put_event_and_wait (%s: %s -> %s)\n",
         FWK_ID_STR(event->id),
         FWK_ID_STR(event->source_id),
         FWK_ID_STR(event->target_id));
@@ -636,6 +640,11 @@ int fwk_thread_put_event_and_wait(
         next_event = FWK_LIST_GET(
             fwk_list_pop_head(&ctx->event_queue), struct fwk_event, slist_node);
 
+        FWK_LOG_TRACE("[THR] put_wait event %08x src %08x dst %08x\n",
+			next_event->id.value,
+			next_event->source_id.value,
+			next_event->target_id.value);
+
         if (wait_state == WAITING_FOR_EVENT) {
             module = fwk_module_get_ctx(next_event->target_id)->desc;
             process_event = module->process_event;
@@ -645,7 +654,9 @@ int fwk_thread_put_event_and_wait(
             response_event.target_id = next_event->source_id;
             response_event.is_delayed_response = false;
 
-            /* Execute the event handler */
+            FWK_LOG_TRACE("[THR] put_wait WAITING_FOR_EVENT\n");
+
+	    /* Execute the event handler */
             status = process_event(next_event, &response_event);
             if (status != FWK_SUCCESS)
                 goto exit;
@@ -688,6 +699,8 @@ int fwk_thread_put_event_and_wait(
         }
 
         if (wait_state == WAITING_FOR_RESPONSE) {
+            FWK_LOG_TRACE("[THR] put_wait WAITING_FOR_RESPONSE\n");
+
             /*
              * The response event has been received, return to
              * the caller.
@@ -703,6 +716,12 @@ int fwk_thread_put_event_and_wait(
     }
 
 exit:
+    FWK_LOG_TRACE(
+        "[FWK] END put_event_and_wait (%s: %s -> %s)\n",
+        FWK_ID_STR(event->id),
+        FWK_ID_STR(event->source_id),
+        FWK_ID_STR(event->target_id));
+
     ctx->current_event = ctx->previous_event;
     ctx->waiting_event_processing_completion = false;
     if (status == FWK_SUCCESS)

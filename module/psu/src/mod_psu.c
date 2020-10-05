@@ -11,6 +11,7 @@
 #include <fwk_event.h>
 #include <fwk_id.h>
 #include <fwk_mm.h>
+#include <fwk_log.h>
 #include <fwk_module.h>
 #include <fwk_module_idx.h>
 #include <fwk_status.h>
@@ -95,6 +96,7 @@ static int mod_psu_get_enabled(fwk_id_t element_id, bool *enabled)
 
             .response_requested = true,
         };
+		FWK_LOG_INFO("[PSU] get enabled %08x src %08x dst %08x\n", request.id.value, request.source_id.value, request.target_id.value);
 
         status = fwk_thread_put_event(&request);
         if (status == FWK_SUCCESS) {
@@ -136,6 +138,8 @@ static int mod_psu_set_enabled(fwk_id_t element_id, bool enabled)
             .response_requested = true,
         };
 
+		FWK_LOG_INFO("[PSU] set enabled %08x src %08x dst %08x\n", request.id.value, request.source_id.value, request.target_id.value);
+		
         status = fwk_thread_put_event(&request);
         if (status == FWK_SUCCESS) {
             ctx->op.state = MOD_PSU_STATE_BUSY;
@@ -175,6 +179,8 @@ static int mod_psu_get_voltage(fwk_id_t element_id, uint32_t *voltage)
 
             .response_requested = true,
         };
+
+        FWK_LOG_INFO("[PSU] get voltage %08x src %08x dst %08x\n", request.id.value, request.source_id.value, request.target_id.value);
 
         status = fwk_thread_put_event(&request);
         if (status == FWK_SUCCESS) {
@@ -216,7 +222,9 @@ static int mod_psu_set_voltage(fwk_id_t element_id, uint32_t voltage)
             .response_requested = true,
         };
 
-        status = fwk_thread_put_event(&request);
+		FWK_LOG_INFO("[PSU] set voltage %08x src %08x dst %08x\n", request.id.value, request.source_id.value, request.target_id.value);
+
+		status = fwk_thread_put_event(&request);
         if (status == FWK_SUCCESS) {
             ctx->op.state = MOD_PSU_STATE_BUSY;
 
@@ -261,6 +269,8 @@ static void mod_psu_respond(
 
     memcpy(event.params, &response, sizeof(response));
 
+	FWK_LOG_INFO("[PSU] respond %08x src %08x dst %08x\n", event.id.value, event.source_id.value, event.target_id.value);
+	
     status = fwk_thread_put_event(&event);
     if (!fwk_expect(status == FWK_SUCCESS))
         ctx->op.state = MOD_PSU_STATE_IDLE;
@@ -309,6 +319,8 @@ static int mod_psu_bind_element(fwk_id_t element_id, unsigned int round)
 
     const struct mod_psu_element_ctx *ctx;
     const struct mod_psu_element_cfg *cfg;
+
+	FWK_LOG_INFO("[PSU] mod_psu_bind_element id %04x round %u\n", element_id.value, round);
 
     if (round > 0)
         goto exit;
@@ -380,6 +392,7 @@ static int mod_psu_process_event(
 
     const struct mod_psu_element_cfg *cfg;
     struct mod_psu_element_ctx *ctx;
+	FWK_LOG_INFO("[DVFS] mod_psu_process_event %08x\n", event->id.value);
 
     resp_params->status =
         mod_psu_get_cfg_ctx(event->target_id, &cfg, &ctx);
@@ -425,6 +438,8 @@ static int mod_psu_process_event(
         default:
             break;
         }
+
+		FWK_LOG_INFO("[PSU] process event %08x src %08x dst %08x\n", hal_event.id.value, hal_event.source_id.value, hal_event.target_id.value);
 
         status = fwk_thread_put_event(&hal_event);
 

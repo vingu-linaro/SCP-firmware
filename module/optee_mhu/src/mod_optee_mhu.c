@@ -99,6 +99,7 @@ fwk_id_t optee_mhu_get_device(unsigned int id)
 
         device_id = (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_OPTEE_MHU,
                               device_index);
+	FWK_LOG_INFO("[MHU] testing device %08x\n", device_id.value);
 
         if (id == device_id.value) {
 
@@ -113,7 +114,7 @@ fwk_id_t optee_mhu_get_device(unsigned int id)
         }
     }
 
-    FWK_LOG_INFO("[MHU] No device found %08x\n", device_id.value);
+    FWK_LOG_INFO("[MHU] No device found %08x\n", id);
     return device_id_none;
 }
 /*

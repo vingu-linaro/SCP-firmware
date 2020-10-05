@@ -111,7 +111,7 @@ static int pd_set_state(fwk_id_t pd_id, unsigned int state)
     pd_ctx = ppu_v0_ctx.pd_ctx_table + fwk_id_get_element_idx(pd_id);
 
     fwk_assert(pd_ctx->pd_driver_input_api != NULL);
-
+    FWK_LOG_INFO("[PPU] pd_set_state id %04x state %d\n", id.value, state);
     switch (state) {
     case MOD_PD_STATE_ON:
         ppu_v0_set_power_mode(pd_ctx->ppu, PPU_V0_MODE_ON, pd_ctx->timer_ctx);

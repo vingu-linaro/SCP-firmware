@@ -228,6 +228,7 @@ static int smt_transmit(fwk_id_t channel_id, uint32_t message_header,
 {
     struct smt_channel_ctx *channel_ctx;
     struct mod_smt_memory *memory;
+    FWK_LOG_INFO("[SMT] smt_transmit id %04x size %d\n", id.value, size);
 
     if (payload == NULL)
         return FWK_E_DATA;

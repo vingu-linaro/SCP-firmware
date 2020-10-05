@@ -13,6 +13,7 @@
 #include <fwk_macros.h>
 #include <fwk_mm.h>
 #include <fwk_module.h>
+#include <fwk_log.h>
 #include <fwk_status.h>
 
 #include <stddef.h>
@@ -143,6 +144,7 @@ static int system_pll_set_rate(fwk_id_t dev_id, uint64_t rate,
     }
 
     ctx->current_rate = rounded_rate;
+//    FWK_LOG_INFO("[PLL] system_pll_set_rate current rate %llu min %llu\n",rounded_rate);
 
     return FWK_SUCCESS;
 }
@@ -150,6 +152,8 @@ static int system_pll_set_rate(fwk_id_t dev_id, uint64_t rate,
 static int system_pll_get_rate(fwk_id_t dev_id, uint64_t *rate)
 {
     struct system_pll_dev_ctx *ctx;
+
+//    FWK_LOG_INFO("[PLL] system_pll_get_rate id %04x\n",dev_id.value);
 
     if (!fwk_module_is_valid_element_id(dev_id))
         return FWK_E_PARAM;
@@ -172,6 +176,7 @@ static int system_pll_get_rate_from_index(fwk_id_t dev_id,
 
 static int system_pll_set_state(fwk_id_t dev_id, enum mod_clock_state state)
 {
+    FWK_LOG_INFO("[SYS PLLCLOCK] system_pll_set_state id %04x state %d \n",dev_id.value, state);
     if (state == MOD_CLOCK_STATE_RUNNING)
         return FWK_SUCCESS;
 
@@ -190,6 +195,7 @@ static int system_pll_get_state(fwk_id_t dev_id, enum mod_clock_state *state)
 
     ctx = module_ctx.dev_ctx_table + fwk_id_get_element_idx(dev_id);
     *state = ctx->current_state;
+    FWK_LOG_INFO("[SYS PLLCLOCK] system_pll_get_state id %04x state %d \n",dev_id.value, *state);
 
     return FWK_SUCCESS;
 }
@@ -276,6 +282,8 @@ static int system_pll_init(fwk_id_t module_id, unsigned int element_count,
 {
     module_ctx.dev_count = element_count;
 
+    FWK_LOG_INFO("[SYS PLL] system_pll_init id %04x count %u\n", module_id.value, element_count);
+
     if (element_count == 0)
         return FWK_SUCCESS;
 
@@ -289,6 +297,8 @@ static int system_pll_element_init(fwk_id_t element_id, unsigned int unused,
 {
     struct system_pll_dev_ctx *ctx;
     const struct mod_system_pll_dev_config *dev_config = data;
+
+    FWK_LOG_INFO("[SYS PLL] system_pll_element_init id %04x \n", element_id.value);
 
     if (!fwk_module_is_valid_element_id(element_id))
         return FWK_E_PARAM;
@@ -309,6 +319,7 @@ static int system_pll_element_init(fwk_id_t element_id, unsigned int unused,
 static int system_pll_process_bind_request(fwk_id_t requester_id, fwk_id_t id,
                                         fwk_id_t api_type, const void **api)
 {
+    FWK_LOG_INFO("[SYS PLL] system_pll_process_bind_request src %04x dst %04x api %04x\n", requester_id.value, id.value, api_type.value);
     *api = &api_system_pll;
     return FWK_SUCCESS;
 }

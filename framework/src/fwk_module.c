@@ -189,6 +189,7 @@ static void fwk_module_init_elements(struct fwk_module_ctx *ctx)
         /* Each element must have a valid pointer to specific data */
         if (!fwk_expect(element->data != NULL))
             fwk_trap();
+        FWK_LOG_INFO("[FWK] fwk_module_init_elements id %04x name %s\n", element_id.value, element->name);
 
         status = desc->element_init(
             element_id, element->sub_element_count, element->data);
@@ -196,7 +197,7 @@ static void fwk_module_init_elements(struct fwk_module_ctx *ctx)
         if (status == FWK_PENDING) {
             element_ctx = fwk_module_get_element_ctx(element_id);
             element_ctx->thread_ctx = fwk_mm_calloc(1, sizeof(struct __fwk_thread_ctx));
-            FWK_LOG_INFO("[FWK] Init thread ctx %08x @ %08x\n", element_id.value, element_ctx->thread_ctx);
+            FWK_LOG_INFO("[FWK] Init thread ctx %08x @ %p\n", element_id.value, element_ctx->thread_ctx);
             fwk_set_thread_ctx(element_id);
             status = __fwk_thread_init(FWK_MODULE_EVENT_COUNT, element_id);
             fwk_set_thread_ctx(none_id);
@@ -248,6 +249,8 @@ static void fwk_module_init_module(struct fwk_module_ctx *ctx)
         fwk_module_init_element_ctxs(ctx, elements, notification_count);
     }
 
+    FWK_LOG_INFO("[FWK] fwk_module_init_module id %04x name %s\n", ctx->id.value, desc->name);
+
     status = desc->init(ctx->id, ctx->element_count, config->data);
     if (!fwk_expect(status == FWK_SUCCESS))
         fwk_trap();
@@ -280,6 +283,8 @@ static int fwk_module_bind_elements(
 
     module = module_ctx->desc;
 
+    FWK_LOG_INFO("[FWK] bind_elements id %04x name %s\n", module_ctx->id.value, module->name);
+
     for (element_idx = 0; element_idx < module_ctx->element_count;
          element_idx++) {
         fwk_module_ctx.bind_id =
@@ -307,6 +312,9 @@ static int fwk_module_bind_module(
     const struct fwk_module *module;
 
     module = module_ctx->desc;
+
+    FWK_LOG_INFO("[FWK] bind_module id %04x name %s\n", module_ctx->id.value, module->name);
+
     if (module->bind == NULL) {
         module_ctx->state = FWK_MODULE_STATE_BOUND;
         return FWK_SUCCESS;
@@ -348,12 +356,18 @@ static int fwk_module_start_elements(struct fwk_module_ctx *module_ctx)
     unsigned int element_idx;
 
     module = module_ctx->desc;
+
+    FWK_LOG_INFO("[FWK] start_elements element_count %lu name %s\n", module_ctx->element_count, module->name);
+
     for (element_idx = 0; element_idx < module_ctx->element_count;
          element_idx++) {
 
         if (module->start != NULL) {
-            status = module->start(
-                fwk_id_build_element_id(module_ctx->id, element_idx));
+            fwk_id_t id;
+
+            id = fwk_id_build_element_id(module_ctx->id, element_idx);
+            FWK_LOG_INFO("[FWK] start_elements id %04x \n", id.value);
+            status = module->start(id);
             if (!fwk_expect(status == FWK_SUCCESS)) {
                 FWK_LOG_CRIT(fwk_module_err_msg_func, status, __func__);
                 return status;
@@ -373,6 +387,7 @@ static int fwk_module_start_module(struct fwk_module_ctx *module_ctx)
     const struct fwk_module *module;
 
     module = module_ctx->desc;
+    FWK_LOG_INFO("[FWK] start_module id %04x name %s\n", module_ctx->id.value, module->name);
 
     if (module->start != NULL) {
         status = module->start(module_ctx->id);
@@ -418,12 +433,15 @@ int fwk_module_start(void)
 
     fwk_set_thread_ctx(none_id);
     status = __fwk_thread_init(FWK_MODULE_EVENT_COUNT, none_id);
+    FWK_LOG_INFO("__fwk_thread_init\n");
     if (status != FWK_SUCCESS)
         return status;
 
+    FWK_LOG_INFO("fwk_module_init_modules\n");
     fwk_module_ctx.stage = MODULE_STAGE_INITIALIZE;
     fwk_module_init_modules();
 
+    FWK_LOG_INFO("fwk_module_bind_modules\n");
     fwk_module_ctx.stage = MODULE_STAGE_BIND;
     for (bind_round = 0; bind_round <= FWK_MODULE_BIND_ROUND_MAX;
          bind_round++) {
@@ -432,6 +450,7 @@ int fwk_module_start(void)
             return status;
     }
 
+    FWK_LOG_INFO("start_modules\n");
     fwk_module_ctx.stage = MODULE_STAGE_START;
     status = start_modules();
     if (status != FWK_SUCCESS)

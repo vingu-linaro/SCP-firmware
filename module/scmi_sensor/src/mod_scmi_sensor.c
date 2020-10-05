@@ -21,6 +21,7 @@
 #include <fwk_event.h>
 #include <fwk_id.h>
 #include <fwk_macros.h>
+#include <fwk_log.h>
 #include <fwk_mm.h>
 #include <fwk_module.h>
 #include <fwk_module_idx.h>
@@ -376,6 +377,7 @@ static int scmi_sensor_trip_point_notify_handler(
     };
 
     parameters = (struct scmi_sensor_trip_point_notify_a2p *)payload;
+	FWK_LOG_INFO("[SCMI SENSOR] scmi_sensor_trip_point_notify_handler id %08x sensor %d mask %08x\n", service_id.value, parameters->sensor_id, parameters->flags);
 
     if (parameters->sensor_id >= scmi_sensor_ctx.sensor_count) {
         /* Sensor does not exist */
@@ -540,6 +542,7 @@ static int scmi_sensor_reading_get_handler(fwk_id_t service_id,
     params = (struct scmi_sensor_event_parameters *)event.params;
     params->sensor_id = FWK_ID_ELEMENT(FWK_MODULE_IDX_SENSOR,
                                        sensor_idx);
+    FWK_LOG_INFO("[SCMI SENSOR] sensor reading get %08x src %08x dst %08x\n", event.id.value, event.source_id.value, event.target_id.value);
 
     status = fwk_thread_put_event(&event);
     if (status != FWK_SUCCESS) {
@@ -849,6 +852,7 @@ static int scmi_sensor_process_event(const struct fwk_event *event,
     uint64_t sensor_value;
     struct scmi_sensor_event_parameters *params;
     struct scmi_sensor_protocol_reading_get_p2a return_values;
+	FWK_LOG_INFO("[DVFS] scmi_sensor_process_event %08x\n", event->id.value);
 
     /* Request event to sensor HAL */
     if (fwk_id_is_equal(event->id, mod_scmi_sensor_event_id_get_request)) {

@@ -20,6 +20,7 @@
 #include <fwk_id.h>
 #include <fwk_log.h>
 #include <fwk_macros.h>
+#include <fwk_log.h>
 #include <fwk_mm.h>
 #include <fwk_module.h>
 #include <fwk_module_idx.h>
@@ -712,6 +713,8 @@ static int create_event_request(
 
     params->clock_dev_id = clock_id;
 
+    FWK_LOG_INFO("[SCMI CLK] create_event_request %08x src %08x dst %08x\n", event.id.value, event.source_id.value, event.target_id.value);
+
     status = fwk_thread_put_event(&event);
     if (status != FWK_SUCCESS)
         return status;
@@ -1025,6 +1028,7 @@ static int scmi_clock_config_set_handler(fwk_id_t service_id,
 
     parameters = (const struct scmi_clock_config_set_a2p*)payload;
     enable = parameters->attributes & SCMI_CLOCK_CONFIG_SET_ENABLE_MASK;
+    FWK_LOG_INFO("[SCMI CLK] scmi_clock_config_set_handler service %d clock id %d state %d\n", service_id.value, parameters->clock_id, enable);
 
     status = get_clock_device_entry(service_id,
                                     parameters->clock_id,
@@ -1263,6 +1267,8 @@ static int scmi_clock_message_handler(fwk_id_t protocol_id, fwk_id_t service_id,
     int status;
 #endif
 
+    FWK_LOG_INFO("[SCMI CLK] scmi_clock_message_handler id %08x service %08x size %lu msg %08x\n", protocol_id.value, service_id.value, payload_size, message_id);
+
     static_assert(FWK_ARRAY_SIZE(handler_table) ==
         FWK_ARRAY_SIZE(payload_size_table),
         "[SCMI] Clock management protocol table sizes not consistent");
@@ -1311,6 +1317,8 @@ static int scmi_clock_init(fwk_id_t module_id, unsigned int element_count,
     const struct mod_scmi_clock_config *config =
         (const struct mod_scmi_clock_config *)data;
 
+    FWK_LOG_INFO("[SCMI] scmi_clock_init id %04x count %u\n", module_id.value, element_count);
+
     if ((config == NULL) || (config->agent_table == NULL))
         return FWK_E_PARAM;
 
@@ -1340,6 +1348,8 @@ static int scmi_clock_bind(fwk_id_t id, unsigned int round)
 {
     int status;
 
+    FWK_LOG_INFO("[SCMI] scmi_clock_bind id %04x round %u\n", id.value, round);
+
     if (round == 1)
         return FWK_SUCCESS;
 
@@ -1365,6 +1375,8 @@ static int scmi_clock_bind(fwk_id_t id, unsigned int round)
 static int scmi_clock_process_bind_request(fwk_id_t source_id,
     fwk_id_t target_id, fwk_id_t api_id, const void **api)
 {
+    FWK_LOG_INFO("[SCMI] scmi_clock_process_bind_request src %04x dst %04x api %04x\n", source_id.value, target_id.value, api_id.value);
+
     if (!fwk_id_is_equal(source_id, FWK_ID_MODULE(FWK_MODULE_IDX_SCMI)))
         return FWK_E_ACCESS;
 
@@ -1387,6 +1399,7 @@ static int process_request_event(const struct fwk_event *event)
     params = (struct event_request_params *)event->params;
     clock_dev_idx = fwk_id_get_element_idx(params->clock_dev_id);
     service_id = clock_ops_get_service(clock_dev_idx);
+    FWK_LOG_INFO("[SCMI CLK] process_request_event service %d clock %d\n", service_id.value, clock_dev_idx);
 
     switch (fwk_id_get_event_idx(event->id)) {
     case SCMI_CLOCK_EVENT_IDX_GET_STATE:
@@ -1464,6 +1477,7 @@ static int process_response_event(const struct fwk_event *event)
 
     clock_dev_idx = fwk_id_get_element_idx(event->source_id);
     service_id = clock_ops_get_service(clock_dev_idx);
+    FWK_LOG_INFO("[SCMI CLK] process_response_event service %d clock %d\n", service_id.value, clock_dev_idx);
 
     if (params->status != FWK_SUCCESS)
         request_response(params->status, service_id);
@@ -1503,6 +1517,7 @@ static int process_response_event(const struct fwk_event *event)
 static int scmi_clock_process_event(const struct fwk_event *event,
                                     struct fwk_event *resp_event)
 {
+    FWK_LOG_INFO("[SCMI CLK] scmi_clock_process_event %08x\n", event->id.value);
     if (fwk_id_get_module_idx(event->source_id) ==
         fwk_id_get_module_idx(fwk_module_id_scmi)) {
         /* Request events */
