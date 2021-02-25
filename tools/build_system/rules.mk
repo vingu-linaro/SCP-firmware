@@ -53,6 +53,10 @@ ifeq ($(BUILD_HAS_SENSOR_EXT_ATTRIBS),yes)
     DEFINES += BUILD_HAS_SENSOR_EXT_ATTRIBS
 endif
 
+ifeq ($(BUILD_HAS_ARCH_OS),yes)
+    DEFINES += BUILD_HAS_ARCH_OS
+endif
+
 export AS := $(CC)
 export LD := $(CC)
 

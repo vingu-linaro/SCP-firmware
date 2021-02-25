@@ -245,6 +245,12 @@ else
     BUILD_HAS_SCMI_SENSOR_V2 := no
 endif
 
+ifeq ($(BS_ARCH_HAS_OS),yes)
+    BUILD_HAS_ARCH_OS := yes
+else
+    BUILD_HAS_ARCH_OS := no
+endif
+
 # Add directories to the list of targets to build
 LIB_TARGETS_y += $(patsubst %,$(MODULES_DIR)/%/src, \
                             $(BUILD_STANDARD_MODULES))

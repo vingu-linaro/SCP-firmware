@@ -221,6 +221,11 @@ int fwk_arch_init(const struct fwk_arch_init_driver *driver);
 void fwk_arch_suspend(void);
 
 /*!
+ * \brief Process an event.
+ */
+void fwk_process_event(void);
+
+/*!
  * \}
  */
 

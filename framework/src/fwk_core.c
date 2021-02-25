@@ -294,17 +294,23 @@ int __fwk_init(size_t event_count)
     return FWK_SUCCESS;
 }
 
-noreturn void __fwk_run(void)
+void __fwk_run_event(void)
 {
     for (;;) {
         while (!fwk_list_is_empty(&ctx.event_queue)) {
             process_next_event();
         }
 
-        if (process_isr()) {
-            continue;
+        if (!process_isr()) {
+            break;
         }
+    }
+}
 
+noreturn void __fwk_run(void)
+{
+    for (;;) {
+        (void)__fwk_run_event();
         (void)fwk_log_unbuffer();
         fwk_arch_suspend();
     }

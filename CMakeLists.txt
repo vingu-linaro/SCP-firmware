@@ -332,6 +332,11 @@ set(SCP_ENABLE_OVERRIDE_FIRMWARE_NAME
     CACHE STRING "Override firmware binary name")
 
 cmake_dependent_option(
+    SCP_ARCHITECTURE_OS "Enable the OS execution environnemen support?"
+    "${SCP_ARCHITECTURE_OS_INIT}"
+    "DEFINED SCP_ARCHITECTURE_OS_INIT" "${SCP_ARCHITECTURE_OS}")
+
+cmake_dependent_option(
     SCP_ENABLE_NOTIFICATIONS "Enable the notification subsystem?"
     "${SCP_ENABLE_NOTIFICATIONS_INIT}" "DEFINED SCP_ENABLE_NOTIFICATIONS_INIT"
     "${SCP_ENABLE_NOTIFICATIONS}")

@@ -33,6 +33,11 @@ int __fwk_init(size_t event_count);
 noreturn void __fwk_run(void);
 
 /*
+ * \brief Processing events already raised by modules and interrupt handlers.
+ */
+void __fwk_run_event(void);
+
+/*
  * \brief Get the event being currently processed.
  *
  * \return The event being currently processed, or \c NULL if event processing

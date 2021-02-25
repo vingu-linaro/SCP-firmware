@@ -23,6 +23,7 @@
 #include <fwk_module.h>
 #include <fwk_module_idx.h>
 #include <fwk_status.h>
+#include <internal/fwk_core.h>
 
 #include <string.h>
 
@@ -31,6 +32,7 @@ extern int fwk_interrupt_init(const struct fwk_arch_interrupt_driver *driver);
 static int fwk_arch_interrupt_init(int (*interrupt_init_handler)(
     const struct fwk_arch_interrupt_driver **driver))
 {
+    /* Initialize interrupt management */
     int status;
     const struct fwk_arch_interrupt_driver *driver;
 
@@ -87,6 +89,17 @@ int fwk_arch_init(const struct fwk_arch_init_driver *driver)
         return FWK_E_PANIC;
     }
 
+    /* In case firmware running under other OS context, finish processing of
+     * any raised events/interrupts and return. Else continue to process events in
+     * a forever loop.
+     */
+#if defined(BUILD_HAS_ARCH_OS)
+    __fwk_run_event();
+    (void)fwk_log_unbuffer();
+#else
+    __fwk_run();
+#endif
+
     return FWK_SUCCESS;
 }
 
@@ -99,4 +112,9 @@ void fwk_arch_suspend(void)
 #if !defined(FMW_DISABLE_ARCH_SUSPEND)
     arch_suspend();
 #endif
+}
+
+void fwk_process_event(void)
+{
+    __fwk_run_event();
 }
