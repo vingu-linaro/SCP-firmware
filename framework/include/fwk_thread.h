@@ -96,7 +96,7 @@ int fwk_thread_get_delayed_response(
 
 
 int fwk_thread_put_event_and_wait(struct fwk_event *event,
-                                   struct fwk_event *resp_event);
+                                   struct fwk_event *resp_event) FWK_DEPRECATED;
 /*!
  * \brief Check if the list of delayed response events of a given module or
  *     element is empty.
@@ -143,6 +143,15 @@ int fwk_thread_is_delayed_response_list_empty(fwk_id_t id, bool *is_empty);
  * \return Status code representing the result of the operation.
  */
 int fwk_thread_get_first_delayed_response(fwk_id_t id, struct fwk_event *event);
+
+
+/*!
+ * \}
+ */
+struct __fwk_thread_ctx **__fwk_get_thread_ctx(void);
+/*!
+ * \}
+ */
 
 /*!
  * \}
