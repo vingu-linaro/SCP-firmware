@@ -58,6 +58,12 @@ else ifeq ($(BS_FIRMWARE_CPU),host)
     BS_ARCH_VENDOR := none
     BS_ARCH_ARCH := host
     BS_ARCH_HAS_OS := yes
+else ifeq ($(BS_FIRMWARE_CPU),optee)
+    BS_ARCH_VENDOR := none
+    BS_ARCH_ARCH := optee
+    BS_ARCH_HAS_OS := yes
+
+    CFLAGS_GCC += -mstrict-align -mgeneral-regs-only
 else
     $(erro "$(BS_FIRMWARE_CPU) is not a supported CPU. Aborting...")
 endif
