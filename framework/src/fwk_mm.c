@@ -28,6 +28,7 @@ void *fwk_mm_alloc_notrap(size_t num, size_t size)
     return malloc(num * size);
 }
 
+#ifdef __ARMCC_VERSION
 void *fwk_mm_alloc_aligned(size_t alignment, size_t num, size_t size)
 {
     void *ptr = aligned_alloc(alignment, num * size);
@@ -37,6 +38,7 @@ void *fwk_mm_alloc_aligned(size_t alignment, size_t num, size_t size)
 
     return ptr;
 }
+#endif
 
 void *fwk_mm_calloc(size_t num, size_t size)
 {
@@ -47,6 +49,7 @@ void *fwk_mm_calloc(size_t num, size_t size)
     return ptr;
 }
 
+#ifdef __ARMCC_VERSION
 void *fwk_mm_calloc_aligned(size_t alignment, size_t num, size_t size)
 {
     void *ptr = fwk_mm_alloc_aligned(alignment, num, size);
@@ -59,6 +62,7 @@ void *fwk_mm_calloc_aligned(size_t alignment, size_t num, size_t size)
 
     fwk_trap();
 }
+#endif
 
 void *fwk_mm_realloc(void *ptr, size_t num, size_t size)
 {
