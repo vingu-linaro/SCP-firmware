@@ -44,4 +44,8 @@ void arm_main(void)
     status = fwk_arch_init(&arch_init_driver);
     if (status != FWK_SUCCESS)
         panic();
+
+    for (;;) {
+	    fwk_process_event();
+    }
 }

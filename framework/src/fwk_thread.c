@@ -30,35 +30,23 @@
 #include <inttypes.h>
 #include <stdbool.h>
 #include <string.h>
-#ifdef BUILD_OPTEE
-#include <kernel/thread.h>
-#endif
+
 static struct __fwk_thread_ctx global_ctx;
 
 static const char err_msg_line[] = "[FWK] Error %d in %s @%d";
 static const char err_msg_func[] = "[FWK] Error %d in %s";
 
-#ifndef CFG_NUM_THREADS
-#define CFG_NUM_THREADS 1
-#endif
-
-#ifndef BUILD_OPTEE
-short int thread_get_id(void) { return 0;}
-#endif
-
-static struct __fwk_thread_ctx *thread_ctx[CFG_NUM_THREADS];
-
 static struct __fwk_thread_ctx *fwk_get_thread_ctx(void)
 {
-    int thread_id = thread_get_id();
+    struct __fwk_thread_ctx **thread_ctx = __fwk_get_thread_ctx();
 
-    return thread_ctx[thread_id];
+    return *thread_ctx;
 }
 
 void fwk_set_thread_ctx(fwk_id_t id)
 {
     struct  __fwk_thread_ctx *tmp = NULL;
-    int thread_id = thread_get_id();
+    struct __fwk_thread_ctx **thread_ctx = __fwk_get_thread_ctx();
 
     /* Find a thread context */
     if (fwk_id_is_type(id, FWK_ID_TYPE_MODULE)) {
@@ -77,7 +65,7 @@ void fwk_set_thread_ctx(fwk_id_t id)
         tmp = &global_ctx;
 
     /* Save thread context */
-    thread_ctx[thread_id] = tmp;
+    *thread_ctx = tmp;
 }
 
 /* States for put_event_and_wait */
@@ -409,23 +397,27 @@ int __fwk_thread_init(size_t event_count, fwk_id_t id)
 
 noreturn void __fwk_thread_run(void)
 {
+    for(;;)
+	__fwk_run_event();
+}
+
+void __fwk_run_event(void)
+{
     struct __fwk_thread_ctx *ctx;
+    FWK_LOG_INFO("[THR] __fwk_run_event\n");
 
     ctx = fwk_get_thread_ctx();
 
-    for (;;) {
+    fwk_process_signal();
+
+    while (!fwk_list_is_empty(&ctx->event_queue)) {
+        process_next_event(ctx);
         fwk_process_signal();
-
-        while (!fwk_list_is_empty(&ctx->event_queue)) {
-            process_next_event(ctx);
-            fwk_process_signal();
-        }
-
-        if (process_isr(ctx))
-            continue;
-
-        fwk_log_unbuffer();
     }
+
+    if (!process_isr(ctx))
+        fwk_log_unbuffer();
+
 }
 
 struct __fwk_thread_ctx *__fwk_thread_get_ctx(void)

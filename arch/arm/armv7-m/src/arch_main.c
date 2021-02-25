@@ -53,7 +53,18 @@ static void arch_init_ccr(void)
 
 int main(void)
 {
+    int status;
+
     arch_init_ccr();
 
-    return fwk_arch_init(&arch_init_driver);
+    status = fwk_arch_init(&arch_init_driver);
+    if (status != FWK_SUCCESS)
+	return status;
+
+    for (;;) {
+	    fwk_process_event();
+    }
+
+    return status;
+
 }

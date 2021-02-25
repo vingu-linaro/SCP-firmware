@@ -25,39 +25,56 @@
 #include <fwk_module_idx.h>
 #include <scmi_agents.h>
 #include <mod_optee_mhu.h>
+#include <internal/fwk_thread.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/select.h>
 #include <termios.h>
-#include <internal/fwk_thread.h>
 
-
-extern int host_interrupt_init(struct fwk_arch_interrupt_driver **driver);
-
-/*
- * Catches early failures in the initialization.
- */
-static noreturn void panic(void)
-{
-    printf("Panic!\n");
-    exit(1);
-}
+#define CFG_NUM_THREADS 1
+static struct __fwk_thread_ctx *thread_ctx[CFG_NUM_THREADS];
 
 static const struct fwk_arch_init_driver arch_init_driver = {
     .interrupt = arch_interrupt_init,
 };
 
+struct __fwk_thread_ctx **__fwk_get_thread_ctx(void)
+{
+    return &thread_ctx[0];
+}
+
+int optee_arch_init(void)
+{
+    return fwk_arch_init(&arch_init_driver);
+}
+
+void optee_process_message(unsigned int id, void *memory)
+{
+	fwk_id_t device_id;
+
+	device_id.value = id;
+
+	FWK_LOG_INFO("+++++ [SRV] enter %08x", device_id.value);
+
+	fwk_set_thread_ctx(device_id);
+
+	FWK_LOG_INFO("[SRV] send message device %08x", device_id.value);
+	optee_mhu_signal_smt_message(device_id, memory);
+
+	FWK_LOG_INFO("[SRV] process event %08x", device_id.value);
+	fwk_process_event();
+
+	FWK_LOG_INFO("----- [SRV] leave %08x", device_id.value);
+}
+
 void host_kbd(void);
 
 int main(void)
 {
-    int status;
-
-    status = fwk_arch_init(&arch_init_driver);
-    if (status != FWK_SUCCESS)
-        panic();
+    optee_arch_init();
 
     host_kbd();
+
 }
 
 /*
@@ -319,18 +336,6 @@ void host_kbd(void)
 
 	device_id = FWK_ID_SUB_ELEMENT(FWK_MODULE_IDX_OPTEE_MHU,0, 0);
 
-	FWK_LOG_INFO("+++++ [SRV] enter %08x\n", device_id.value);
-
-	fwk_set_thread_ctx(device_id);
-
-	FWK_LOG_INFO("[SRV] send message device %08x\n", device_id.value);
-	optee_mhu_signal_smt_message(device_id, memory);
-
-	FWK_LOG_INFO("[SRV] process event %08x\n", device_id.value);
-	__fwk_run_event();
-
-	FWK_LOG_INFO("----- [SRV] leave %08x\n", device_id.value);
+	optee_process_message(device_id.value, memory);
     }
-
 }
-
