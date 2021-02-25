@@ -53,6 +53,8 @@ static struct __fwk_multi_thread_ctx ctx;
 static const char err_msg_line[] = "[FWK] Error %d @%d";
 static const char err_msg_func[] = "[FWK] Error %d in %s";
 
+void fwk_set_thread_ctx(fwk_id_t id) { }
+
 /*
  * Static functions
  */
@@ -224,6 +226,7 @@ static int put_event(struct __fwk_thread_ctx *target_thread_ctx,
         target_thread_ctx, event);
 
     if (event->is_delayed_response) {
+#ifdef BUILD_HAS_NOTIFICATION
         allocated_event = __fwk_thread_search_delayed_response(
             event->source_id, event->cookie);
         if (allocated_event == NULL)
@@ -236,6 +239,9 @@ static int put_event(struct __fwk_thread_ctx *target_thread_ctx,
         memcpy(allocated_event->params, event->params,
                sizeof(allocated_event->params));
         allocated_event->is_thread_wakeup_event = event->is_thread_wakeup_event;
+#else
+            return FWK_E_PANIC;
+#endif
     } else {
         allocated_event = duplicate_event(event);
         if (allocated_event == NULL)
@@ -311,12 +317,16 @@ static void process_event_requiring_response(struct fwk_event *event)
     if (!resp_event.is_delayed_response)
         put_event(source_thread_ctx, &resp_event);
     else {
+#ifdef BUILD_HAS_NOTIFICATION
         allocated_event = duplicate_event(&resp_event);
         if (allocated_event != NULL) {
             fwk_list_push_tail(
                 __fwk_thread_get_delayed_response_list(resp_event.source_id),
                 &allocated_event->slist_node);
         }
+#else
+        FWK_LOG_CRIT(err_msg_line, status, __LINE__);
+#endif
     }
 }
 
@@ -707,7 +717,7 @@ static void logging_thread(void *arg)
  * Private interface functions
  */
 
-int __fwk_thread_init(size_t event_count)
+int __fwk_thread_init(size_t event_count, fwk_id_t id)
 {
     int status;
     struct fwk_event *event_table, *event_table_end, *event;
