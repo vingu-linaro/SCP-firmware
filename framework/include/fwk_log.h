@@ -10,6 +10,7 @@
 
 #include <fwk_attributes.h>
 #include <fwk_io.h>
+
 #include <fwk_macros.h>
 
 #if FWK_HAS_INCLUDE(<fmw_log.h>)
@@ -210,6 +211,110 @@
         FWK_MAP(FWK_LOG_VOID_EXPR, __VA_ARGS__) \
     } while (0)
 
+
+#ifdef BUILD_OPTEE
+extern void trace_printf(const char *func, int line, int level, bool level_ok, const char *fmt, ...);
+#define trace_printf_helper(level, level_ok, ...) \
+	trace_printf(__func__, __LINE__, (level), (level_ok), \
+		     __VA_ARGS__)
+#define TRACE_INFO      2
+
+#define fwk_log_printf(...) trace_printf_helper(TRACE_INFO, true, __VA_ARGS__)
+
+#ifndef FWK_LOG_LEVEL
+#define FWK_LOG_LEVEL FWK_LOG_LEVEL_TRACE
+#endif
+
+static inline int fwk_log_init(void)
+{
+	return FWK_SUCCESS;
+}
+
+static inline void fwk_log_flush(void)
+{
+}
+
+static inline int fwk_log_unbuffer(void)
+{
+	return 0;
+}
+
+#elif  defined(BUILD_HOST)
+#include <stdio.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <termios.h>
+
+#define fwk_log_printf(...) printf(__VA_ARGS__)
+
+static inline int fwk_log_init(void)
+{
+	return FWK_SUCCESS;
+}
+
+static inline void fwk_log_flush(void)
+{
+}
+
+static inline int fwk_log_unbuffer(void)
+{
+	return 0;
+}
+
+#else
+/*!
+ * \internal
+ *
+ * \brief Log a message with a specified filter level.
+ *
+ * \param[in] format Format string.
+ * \param[in] ... Associated parameters.
+ */
+void fwk_log_printf(const char *format, ...) FWK_PRINTF(1, 2);
+
+/*!
+ * \internal
+ *
+ * \brief Flush the logging backend(s).
+ */
+void fwk_log_flush(void);
+
+/*!
+ * \internal
+ *
+ * \brief Unbuffer a single character and send it to the logging backend.
+ *
+ * \details This function is reserved for the framework implementation, and is
+ *      used by the scheduler to print opportunistically when idling, and when
+ *      flushing to flush the buffer to the logging backend.
+ *
+ * \retval ::FWK_PENDING The character was unbuffered successfully but there are
+ *      still characters remaining in the buffer.
+ * \retval ::FWK_SUCCESS The character was unbuffered successfully and the
+ *      buffer is now empty.
+ * \retval ::FWK_E_DEVICE The backend returned an error.
+ *
+ * \return Status code representing the result of the operation.
+ */
+int fwk_log_unbuffer(void);
+
+/*!
+ * \internal
+ *
+ * \brief Initialize the logging component.
+ *
+ * \details Initializes the logging framework component, making logging
+ *      facilities to the framework and, later, modules.
+ *
+ * \return Status code representing the result of the operation.
+ */
+int fwk_log_init(void);
+
+#endif /* BUILD_OPTEE */
+
+
 /*!
  * \brief Flush the logging backend.
  *
@@ -293,60 +398,8 @@
 #    define FWK_LOG_CRIT(...) FWK_LOG_VOID(__VA_ARGS__)
 #endif
 
-/*!
- * \internal
- *
- * \brief Log a message with a specified filter level.
- *
- * \param[in] format Format string.
- * \param[in] ... Associated parameters.
- */
-void fwk_log_printf(const char *format, ...) FWK_PRINTF(1, 2);
-
-/*!
- * \internal
- *
- * \brief Flush the logging backend(s).
- */
-void fwk_log_flush(void);
-
-/*!
- * \internal
- *
- * \brief Unbuffer a single character and send it to the logging backend.
- *
- * \details This function is reserved for the framework implementation, and is
- *      used by the scheduler to print opportunistically when idling, and when
- *      flushing to flush the buffer to the logging backend.
- *
- * \retval ::FWK_PENDING The character was unbuffered successfully but there are
- *      still characters remaining in the buffer.
- * \retval ::FWK_SUCCESS The character was unbuffered successfully and the
- *      buffer is now empty.
- * \retval ::FWK_E_DEVICE The backend returned an error.
- *
- * \return Status code representing the result of the operation.
- */
-int fwk_log_unbuffer(void);
-
-/*!
- * \internal
- *
- * \brief Initialize the logging component.
- *
- * \details Initializes the logging framework component, making logging
- *      facilities to the framework and, later, modules.
- *
- * \return Status code representing the result of the operation.
- */
-int fwk_log_init(void);
 
 /*!
  * \}
  */
-
-/*!
- * \}
- */
-
 #endif /* FWK_LOG_H */
