@@ -229,4 +229,19 @@ enum scmi_voltd_command_id {
  * \}
  */
 
+/*!
+ * \brief SCMI Reset Domain Protocol
+ */
+#define MOD_SCMI_PROTOCOL_ID_INTERRUPT UINT32_C(0x80)
+
+/*!
+ * \brief SCMI Reset Domain Management Protocol Message IDs
+ */
+enum scmi_interrupt_domain_command_id {
+    MOD_SCMI_INTERRUPT_ATTRIBUTES = 0x03,
+    MOD_SCMI_INTERRUPT_NOTIFY = 0x04,
+    MOD_SCMI_INTERRUPT_COMMAND_COUNT,
+};
+
+
 #endif /* MOD_SCMI_STD_H */
