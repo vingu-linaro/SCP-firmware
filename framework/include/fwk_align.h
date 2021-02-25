@@ -22,4 +22,7 @@
 #    include <stdalign.h>
 #endif
 
+#include <stdint.h>
+typedef uintmax_t fwk_max_align_t;
+
 #endif /* FWK_ALIGN_H */

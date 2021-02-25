@@ -95,7 +95,7 @@ struct fwk_event {
     fwk_id_t id;
 
     /*! Table of event parameters */
-    alignas(max_align_t) uint8_t params[FWK_EVENT_PARAMETERS_SIZE];
+    alignas(fwk_max_align_t) uint8_t params[FWK_EVENT_PARAMETERS_SIZE];
 };
 
 /*!
