@@ -85,13 +85,18 @@ TARGET := $(BIN_DIR)/$(FIRMWARE)
 TARGET_BIN := $(TARGET).bin
 TARGET_ELF := $(TARGET).elf
 TARGET_SREC := $(TARGET).srec
+TARGET_LIB := $(BIN_DIR)/libscmi-$(FIRMWARE).a
 
-ifeq ($(BS_LINKER),ARM)
-    TARGET_GOAL := $(TARGET_BIN)
-else ifeq ($(BS_TOOLCHAIN),LLVM)
-    TARGET_GOAL := $(TARGET_BIN)
+ifeq ($(BS_ARCH_ARCH),optee)
+    TARGET_GOAL := $(TARGET_LIB)
 else
-    TARGET_GOAL := $(TARGET_SREC)
+    ifeq ($(BS_LINKER),ARM)
+        TARGET_GOAL := $(TARGET_BIN)
+    else ifeq ($(BS_TOOLCHAIN),LLVM)
+        TARGET_GOAL := $(TARGET_BIN)
+    else
+        TARGET_GOAL := $(TARGET_SREC)
+    endif
 endif
 
 vpath %.c $(FIRMWARE_DIR)
@@ -101,7 +106,7 @@ vpath %.S $(PRODUCT_DIR)/src
 
 goal: $(TARGET_GOAL)
 
-ifneq ($(BS_ARCH_CPU),host)
+ifeq ($(BS_ARCH_VENDOR),arm)
     ifeq ($(BS_LINKER),ARM)
         SCATTER_SRC = $(ARCH_DIR)/$(BS_ARCH_VENDOR)/$(BS_ARCH_ARCH)/src/arch.scatter.S
     else
@@ -339,12 +344,23 @@ LDFLAGS_ARM += \
     $(LIBS_y) \
     $(OBJECTS)
 
+LDFLAGS_LIB = \
+        $(MODULE_LIBS_y) \
+        $(LIBS_y) \
+        $(OBJECTS) \
+        $(LIBS_GROUP_END) \
+
+
 .SECONDEXPANSION:
 
 $(TARGET_ELF): $(LIB_TARGETS_y) $(SCATTER_PP) $(OBJECTS) | $$(@D)/
 	$(call show-action,LD,$@)
 	$(LD) $(LDFLAGS) -o $@
 	$(SIZE) $@
+
+$(TARGET_LIB): $(LIB_TARGETS_y) $(SCATTER_PP) $(OBJECTS) | $$(@D)/
+	$(call show-action,LD,$@)
+	$(AR) rcT $@ $(LDFLAGS_LIB)
 
 $(SCATTER_PP): $(SCATTER_SRC) | $$(@D)/
 	$(call show-action,GEN,$@)

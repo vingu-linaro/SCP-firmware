@@ -57,6 +57,11 @@ else ifneq ($(findstring $(BS_FIRMWARE_CPU),$(ARMV8A_CPUS)),)
 else ifeq ($(BS_FIRMWARE_CPU),host)
     BS_ARCH_VENDOR := none
     BS_ARCH_ARCH := host
+else ifeq ($(BS_FIRMWARE_CPU),optee)
+    BS_ARCH_VENDOR := none
+    BS_ARCH_ARCH := optee
+
+    CFLAGS_GCC += -mstrict-align
 else
     $(erro "$(BS_FIRMWARE_CPU) is not a supported CPU. Aborting...")
 endif

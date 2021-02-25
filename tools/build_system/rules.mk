@@ -97,6 +97,13 @@ ifeq ($(BS_ARCH_ARCH),host)
 #
 # Compiler options used when cross compiling
 #
+else ifeq ($(BS_ARCH_ARCH),optee)
+    DEFINES += BUILD_OPTEE
+
+#
+# Compiler options used when cross compiling
+#
+
 else
     LDFLAGS_ARM += -Wl,--scatter=$(SCATTER_PP)
     LDFLAGS_GCC += -Wl,--script=$(SCATTER_PP)
@@ -223,13 +230,13 @@ else
 endif
 
 ifeq ($(MODE),release)
-    O ?= $(DEFAULT_OPT_GCC_RELEASE)
+    O_LEVEL ?= $(DEFAULT_OPT_GCC_RELEASE)
     LOG_LEVEL ?= $(DEFAULT_LOG_LEVEL_RELEASE)
 
     # Disable assertions in release mode
     DEFINES += NDEBUG
 else
-    O ?= $(DEFAULT_OPT_GCC_DEBUG)
+    O_LEVEL ?= $(DEFAULT_OPT_GCC_DEBUG)
     LOG_LEVEL ?= $(DEFAULT_LOG_LEVEL_DEBUG)
 
     DEFINES += BUILD_MODE_DEBUG
@@ -271,7 +278,7 @@ endif
 #
 # Toolchain-independent flags
 #
-CFLAGS += -O$(O)
+CFLAGS += -O$(O_LEVEL)
 CFLAGS += $(addprefix -I,$(INCLUDES)) $(addprefix -D,$(DEFINES))
 ASFLAGS += $(addprefix -I,$(INCLUDES)) $(addprefix -D,$(DEFINES))
 
