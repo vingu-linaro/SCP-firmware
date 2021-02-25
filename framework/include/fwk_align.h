@@ -1,6 +1,6 @@
 /*
  * Arm SCP/MCP Software
- * Copyright (c) 2018-2021, Arm Limited and Contributors. All rights reserved.
+ * Copyright (c) 2018-2022, Arm Limited and Contributors. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -20,6 +20,14 @@
 #   define __alignof_is_defined 1
 #else
 #    include <stdalign.h>
+#endif
+
+#include <stddef.h>
+#ifdef max_align_t
+typedef max_align_t fwk_max_align_t;
+#else
+#include <stdint.h>
+typedef uintmax_t fwk_max_align_t;
 #endif
 
 #endif /* FWK_ALIGN_H */
