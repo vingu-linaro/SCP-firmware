@@ -1,6 +1,6 @@
 /*
  * Arm SCP/MCP Software
- * Copyright (c) 2015-2021, Arm Limited and Contributors. All rights reserved.
+ * Copyright (c) 2015-2022, Arm Limited and Contributors. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -34,4 +34,9 @@ int main(void)
     status = fwk_arch_init(&arch_init_driver);
     if (status != FWK_SUCCESS)
         panic();
+}
+
+int scmi_arch_deinit(void)
+{
+    return fwk_arch_deinit();
 }

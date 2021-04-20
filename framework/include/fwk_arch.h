@@ -258,6 +258,15 @@ struct fwk_arch_init_driver {
 int fwk_arch_init(const struct fwk_arch_init_driver *driver);
 
 /*!
+ * \brief Stop the framework library.
+ *
+ * \retval ::FWK_SUCCESS Operation succeeded.
+ * \retval ::FWK_E_PARAM One or more parameters were invalid.
+ * \retval ::FWK_E_PANIC Unrecoverable initialization error.
+ */
+int fwk_arch_deinit(void);
+
+/*!
  * \brief Architecture defined suspend, will wakup on receiving interrupt
  *
  */
