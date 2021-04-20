@@ -6,34 +6,55 @@
  */
 
 #include <fwk_arch.h>
-#include <fwk_noreturn.h>
 #include <fwk_status.h>
+#include <fwk_log.h>
 
-#include <arch_interrupt.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-
-/*
- * Catches early failures in the initialization.
- */
-static noreturn void panic(void)
+static unsigned int default_interrupt_lock(void)
 {
-    printf("Panic!\n");
-    exit(1);
+    return 0;
 }
 
-static const struct fwk_arch_init_driver arch_init_driver = {
-    .interrupt = arch_interrupt_init,
+static void default_interrupt_unlock(unsigned int flags)
+{
+    return;
+}
+
+static int default_get_context(void)
+{
+    return FWK_E_STATE;
+}
+
+static const struct fwk_arch_atomic_driver os_driver = {
+    .interrupt_lock = default_interrupt_lock,
+    .interrupt_unlock = default_interrupt_unlock,
+    .get_context = default_get_context,
 };
 
-int main(void)
+static int os_atomic_init(const struct fwk_arch_atomic_driver **_driver)
+{
+    if (_driver == NULL)
+        return FWK_E_PARAM;
+
+    *_driver = &os_driver;
+    return FWK_SUCCESS;
+}
+
+static const struct fwk_arch_init_driver os_init_driver = {
+    .interrupt = NULL,
+    .atomic = os_atomic_init,
+};
+
+/* SCMI server init/deinit wrapper */
+int scmi_arch_init(void)
 {
     int status;
 
-    status = fwk_arch_init(&arch_init_driver);
-    if (status != FWK_SUCCESS)
-        panic();
+    status = fwk_arch_init(&os_init_driver);
+
+    fwk_log_flush();
+
+    return status;
 }
 
 int scmi_arch_deinit(void)

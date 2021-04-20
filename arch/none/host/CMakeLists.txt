@@ -11,5 +11,4 @@ target_include_directories(arch-none
                            PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 target_sources(
-    arch-none PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/arch_interrupt.c"
-                      "${CMAKE_CURRENT_SOURCE_DIR}/src/arch_main.c")
+    arch-none PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/arch_main.c")

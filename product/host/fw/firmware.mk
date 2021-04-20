@@ -13,6 +13,8 @@ BS_FIRMWARE_HAS_NOTIFICATION := yes
 
 BS_FIRMWARE_MODULES := stdio
 
-BS_FIRMWARE_SOURCES := config_stdio.c
+BS_FIRMWARE_SOURCES := config_stdio.c \
+                       config_host.c
+
 
 include $(BS_DIR)/firmware.mk
