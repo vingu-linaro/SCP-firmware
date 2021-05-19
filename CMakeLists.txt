@@ -345,6 +345,11 @@ set(SCP_ENABLE_OVERRIDE_FIRMWARE_NAME
     CACHE STRING "Override firmware binary name")
 
 cmake_dependent_option(
+    SCP_ENABLE_CMSIS "Enable the CMSIS RTOS support?"
+    "${SCP_ENABLE_CMSIS_INIT}"
+    "DEFINED SCP_ENABLE_CMSIS_INIT" "${SCP_ENABLE_CMSIS}")
+
+cmake_dependent_option(
     SCP_ARCHITECTURE_OS "Enable the OS execution environnemen support?"
     "${SCP_ARCHITECTURE_OS_INIT}"
     "DEFINED SCP_ARCHITECTURE_OS_INIT" "${SCP_ARCHITECTURE_OS}")
