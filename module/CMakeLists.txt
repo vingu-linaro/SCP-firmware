@@ -278,6 +278,10 @@ foreach(SCP_MODULE IN LISTS SCP_VALID_MODULES)
     target_link_libraries(${SCP_FIRMWARE_TARGET} PRIVATE ${SCP_MODULE_TARGET})
     target_link_libraries(${SCP_MODULE_TARGET} ${SCP_MODULE_PUBLIC} framework)
 
+    if (SCP_ENABLE_CMSIS)
+        target_link_libraries(app PRIVATE ${SCP_MODULE_TARGET})
+    endif()
+
     #
     # Handle any modules that we actually intend on linking to.
     #

@@ -40,6 +40,11 @@ target_sources(
             "${CMAKE_CURRENT_SOURCE_DIR}/src/stdlib.c"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/fwk_core.c")
 
+if(SCP_ENABLE_CMSIS)
+    target_compile_definitions(framework PUBLIC "BUILD_HAS_CMSIS")
+
+    target_include_directories(framework PRIVATE ${ZEPHYR_BASE}/include/cmsis_rtos_v2)
+endif()
 
 if(SCP_ARCHITECTURE_OS)
     target_compile_definitions(framework PUBLIC "BUILD_HAS_ARCH_OS")

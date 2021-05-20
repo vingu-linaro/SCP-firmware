@@ -77,6 +77,8 @@ TARGET_LIB := $(BIN_DIR)/libscmi-$(FIRMWARE).a
 
 ifeq ($(BS_ARCH_ARCH),optee)
     TARGET_GOAL := $(TARGET_LIB)
+else ifeq ($(BS_ARCH_ARCH),zephyr)
+    TARGET_GOAL := $(TARGET_LIB)
 else
     ifeq ($(BS_LINKER),ARM)
         TARGET_GOAL := $(TARGET_BIN)
