@@ -24,6 +24,21 @@
 #include <scmi_agents.h>
 #include <fwk_core.h>
 #include <mod_optee_mhu.h>
+#include <internal/fwk_context.h>
+
+extern short int thread_get_id(void);
+
+static struct __fwk_ctx *thread_ctx[CFG_NUM_THREADS];
+
+struct __fwk_ctx *arch_get_execution_ctx(void)
+{
+    return thread_ctx[thread_get_id()];
+}
+
+void arch_set_execution_ctx(struct __fwk_ctx *ctx)
+{
+    thread_ctx[thread_get_id()] = ctx;
+}
 
 static unsigned int default_interrupt_lock(void)
 {

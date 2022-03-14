@@ -143,7 +143,7 @@ static void test___fwk_init(void)
     fwk_mm_calloc_return_val = true;
 
     /* Insert 2 events in the list */
-    result = __fwk_init(event_count);
+    result = __fwk_init(event_count, &global_ctx);
     assert(result == FWK_SUCCESS);
     assert(
         ctx->free_event_queue.head ==
@@ -194,7 +194,7 @@ static void test___fwk_run(void)
         .id = FWK_ID_NOTIFICATION(0x5, 0x9),
     };
 
-    result = __fwk_init(1);
+    result = __fwk_init(1, &global_ctx);
     assert(result == FWK_SUCCESS);
     free_event_queue_break = true;
     allocated_event = FWK_LIST_GET(
@@ -348,7 +348,7 @@ static void test_fwk_put_event(void)
     result = fwk_put_event(&event2);
     assert(result == FWK_E_INIT);
 
-    result = __fwk_init(2);
+    result = __fwk_init(2, &global_ctx);
     assert(result == FWK_SUCCESS);
 
     /* Invalid entity ID */
@@ -415,7 +415,7 @@ static void test_fwk_put_event_light(void)
     result = fwk_put_event(&event2);
     assert(result == FWK_E_INIT);
 
-    result = __fwk_init(2);
+    result = __fwk_init(2, &global_ctx);
     assert(result == FWK_SUCCESS);
 
     /* Invalid entity ID */
@@ -483,7 +483,7 @@ static void test___fwk_put_notification(void)
         .response_requested = false,
     };
 
-    result = __fwk_init(2);
+    result = __fwk_init(2, &global_ctx);
     assert(result == FWK_SUCCESS);
 
     result = __fwk_put_notification(&event1);

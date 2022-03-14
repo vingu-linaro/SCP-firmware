@@ -16,6 +16,7 @@
 #include <fwk_log.h>
 #include <fwk_module.h>
 #include <fwk_module_idx.h>
+#include <fwk_core.h>
 #include <fwk_status.h>
 #include <mod_optee_mhu.h>
 #include <mod_optee_smt.h>
@@ -52,6 +53,8 @@ void optee_mhu_signal_smt_message(fwk_id_t device_id, void *memory)
 {
     struct mhu_device_ctx *device_ctx;
     unsigned int device_idx = fwk_id_get_element_idx(device_id);
+
+    fwk_set_ctx(device_id);
 
     if (device_idx < mhu_ctx.device_count) {
         device_ctx = &mhu_ctx.device_ctx_table[device_idx];
@@ -171,7 +174,11 @@ static int mhu_device_init(fwk_id_t device_id, unsigned int slot_count,
 
     device_ctx->allocated = false;
 
-    return FWK_SUCCESS;
+    /*
+     * Request the creation of an execution context for the device so we can
+     * paralellize unrelated request.
+     */
+    return FWK_INIT_CTX;
 }
 
 static int mhu_bind(fwk_id_t id, unsigned int round)
