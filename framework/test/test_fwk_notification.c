@@ -69,18 +69,8 @@ bool __wrap_fwk_module_is_valid_notification_id(fwk_id_t id)
     return is_valid_notification_id_return_val;
 }
 
-int __wrap_fwk_interrupt_global_enable(void)
-{
-    return FWK_SUCCESS;
-}
-
-int __wrap_fwk_interrupt_global_disable(void)
-{
-    return FWK_SUCCESS;
-}
-
 static int interrupt_get_current_return_val;
-int __wrap_fwk_interrupt_get_current(unsigned int *interrupt)
+int __wrap_fwk_interrupt_context(unsigned int *interrupt)
 {
     return interrupt_get_current_return_val;
 }

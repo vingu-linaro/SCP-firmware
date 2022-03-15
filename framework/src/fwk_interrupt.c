@@ -1,6 +1,6 @@
 /*
  * Arm SCP/MCP Software
- * Copyright (c) 2015-2021, Arm Limited and Contributors. All rights reserved.
+ * Copyright (c) 2015-2022, Arm Limited and Contributors. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -19,7 +19,6 @@
 
 static bool initialized;
 static const struct fwk_arch_interrupt_driver *fwk_interrupt_driver;
-
 /*
  * This variable is used to ensure spurious nested calls won't
  * enable interrupts. This is been accessed from inline function defined in
@@ -205,4 +204,64 @@ int fwk_interrupt_set_isr_fault(void (*isr)(void))
     }
 
     return fwk_interrupt_driver->set_isr_fault(isr);
+}
+
+static unsigned int default_interrupt_lock(void)
+{
+    fwk_interrupt_global_disable();
+    return 0;
+}
+
+static void default_interrupt_unlock(unsigned int flags)
+{
+    fwk_interrupt_global_enable();
+}
+
+int default_get_context(void)
+{
+    unsigned int interrupt;
+    return fwk_interrupt_get_current(&interrupt);
+}
+
+const struct fwk_arch_atomic_driver default_atomic_driver = {
+    .interrupt_lock = default_interrupt_lock,
+    .interrupt_unlock = default_interrupt_unlock,
+    .get_context = default_get_context,
+};
+
+static const struct fwk_arch_atomic_driver *fwk_atomic_driver = &default_atomic_driver;
+
+int fwk_atomic_init(const struct fwk_arch_atomic_driver *driver)
+{
+    if (driver == NULL) {
+        return FWK_E_PARAM;
+    }
+    if (driver->interrupt_lock == NULL) {
+        return FWK_E_PARAM;
+    }
+    if (driver->interrupt_unlock == NULL) {
+        return FWK_E_PARAM;
+    }
+    if (driver->get_context == NULL) {
+        return FWK_E_PARAM;
+    }
+
+    fwk_atomic_driver = driver;
+
+    return FWK_SUCCESS;
+}
+
+int fwk_interrupt_context(void)
+{
+    return fwk_atomic_driver->get_context();
+}
+
+unsigned int fwk_interrupt_lock(void)
+{
+    return fwk_atomic_driver->get_context();
+}
+
+void fwk_interrupt_unlock(unsigned int key)
+{
+    fwk_atomic_driver->interrupt_unlock(key);
 }

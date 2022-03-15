@@ -181,6 +181,36 @@ struct fwk_arch_interrupt_driver {
 };
 
 /*!
+ * \brief atomic operation driver interface.
+ *
+ * \details The atomic driver interface allows the OS to provide
+ *      OS-specific handling for atomic operation.
+ */
+struct fwk_arch_atomic_driver {
+    /*!
+     * \brief Lock interrupts.
+     *
+     * \retval ::FWK_SUCCESS Operation succeeded.
+     */
+    unsigned int (*interrupt_lock)(void);
+
+    /*!
+     * \brief Unlock interrupts.
+     *
+     * \retval ::FWK_SUCCESS Operation succeeded.
+     */
+    void (*interrupt_unlock)(unsigned int);
+
+    /*!
+     * \brief Get the execution context.
+     *
+     * \retval ::FWK_SUCCESS An interrupt is currently being serviced.
+     * \retval ::FWK_E_STATE An interrupt is not currently being serviced.
+     */
+    int (*get_context)(void);
+};
+
+/*!
  * \brief Initialization driver interface.
  *
  * \details The initialization driver interface allows the framework to request
@@ -191,15 +221,28 @@ struct fwk_arch_init_driver {
      * \brief Interrupt driver initialization.
      *
      * \details This handler is used by the framework library to request the
-     *      interrupt driver.
+     *      interrupt and atomic drivers.
      *
-     * \param [out] driver Pointer to an interrupt driver.
+     * \param [out] driver Pointer to an interrupt and an atomic driver.
      *
      * \retval ::FWK_SUCCESS Operation succeeded.
      * \retval ::FWK_E_PARAM The parameter received by the handler is invalid.
      * \retval ::FWK_E_PANIC Unrecoverable initialization error.
      */
     int (*interrupt)(const struct fwk_arch_interrupt_driver **driver);
+   /*!
+     * \brief Atomic driver initialization.
+     *
+     * \details This handler is used by the framework library to request the
+     *      atomic drivers.
+     *
+     * \param [out] driver Pointer to an atomic driver.
+     *
+     * \retval ::FWK_SUCCESS Operation succeeded.
+     * \retval ::FWK_E_PARAM The parameter received by the handler is invalid.
+     * \retval ::FWK_E_PANIC Unrecoverable initialization error.
+     */
+    int (*atomic)(const struct fwk_arch_atomic_driver **driver);
 };
 
 /*!

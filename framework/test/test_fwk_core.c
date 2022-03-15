@@ -81,18 +81,8 @@ struct fwk_element_ctx *__wrap_fwk_module_get_element_ctx(fwk_id_t id)
     return &fake_element_ctx;
 }
 
-int __wrap_fwk_interrupt_global_enable(void)
-{
-    return FWK_SUCCESS;
-}
-
-int __wrap_fwk_interrupt_global_disable(void)
-{
-    return FWK_SUCCESS;
-}
-
 static int interrupt_get_current_return_val;
-int __wrap_fwk_interrupt_get_current(unsigned int *interrupt)
+int __wrap_fwk_interrupt_context(unsigned int *interrupt)
 {
     return interrupt_get_current_return_val;
 }

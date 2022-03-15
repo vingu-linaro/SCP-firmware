@@ -549,7 +549,6 @@ static int dvfs_set_level(fwk_id_t domain_id, uintptr_t cookie, uint32_t level)
 {
     struct mod_dvfs_domain_ctx *ctx;
     const struct mod_dvfs_opp *new_opp;
-    unsigned int interrupt;
 
     ctx = get_domain_ctx(domain_id);
     if (ctx == NULL) {
@@ -572,7 +571,7 @@ static int dvfs_set_level(fwk_id_t domain_id, uintptr_t cookie, uint32_t level)
         return FWK_SUCCESS;
     }
 
-    if (fwk_interrupt_get_current(&interrupt) == FWK_SUCCESS) {
+    if (fwk_interrupt_context() == FWK_SUCCESS) {
         ctx->request.set_source_id = true;
     } else {
         ctx->request.set_source_id = false;

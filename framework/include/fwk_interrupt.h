@@ -1,6 +1,6 @@
 /*
  * Arm SCP/MCP Software
- * Copyright (c) 2015-2021, Arm Limited and Contributors. All rights reserved.
+ * Copyright (c) 2015-2022, Arm Limited and Contributors. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -224,6 +224,28 @@ int fwk_interrupt_set_isr_param(unsigned int interrupt,
  * \retval ::FWK_E_INIT The component has not been initialized.
  */
 int fwk_interrupt_get_current(unsigned int *interrupt);
+
+/*!
+ * \brief Check if an interrupt service routine is processed.
+ *
+ * \retval ::FWK_SUCCESS Operation succeeded.
+ * \retval ::FWK_E_STATE An interrupt is not currently being serviced.
+ */
+int fwk_interrupt_context(void);
+
+/*!
+ * \brief Disable interrupt preemption.
+ *
+ * \retval an opaque key to provide back when unlocking.
+ */
+unsigned int fwk_interrupt_lock(void);
+
+/*!
+ * \brief Enable interrupts preemption.
+ *
+ * \param [in] key value returned when locked
+ */
+void fwk_interrupt_unlock(unsigned int key);
 
 /*!
  * \}

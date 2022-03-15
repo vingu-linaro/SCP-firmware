@@ -18,6 +18,7 @@
 #    include <fmw_arch.h>
 #endif
 
+#include <fwk_interrupt.h>
 #include <fwk_io.h>
 #include <fwk_log.h>
 #include <fwk_module.h>
@@ -26,6 +27,42 @@
 #include <internal/fwk_core.h>
 
 #include <string.h>
+
+extern int fwk_atomic_init(const struct fwk_arch_atomic_driver *driver);
+extern const struct fwk_arch_atomic_driver default_atomic_driver;
+
+static int fwk_arch_atomic_init(int (*atomic_init_handler)(
+    const struct fwk_arch_atomic_driver **driver))
+{
+    /* Initialize atomic management */
+    int status;
+    const struct fwk_arch_atomic_driver *driver;
+
+    if (atomic_init_handler == NULL) {
+        /*
+         * By default we use some atomic functions based on interrupt
+         * driver.
+         */
+        return FWK_SUCCESS;
+    }
+
+    /*
+     * Retrieve a pointer to the atomic management driver from the
+     * architecture layer.
+     */
+    status = atomic_init_handler(&driver);
+    if (status != FWK_SUCCESS) {
+        return FWK_E_PANIC;
+    }
+
+    /* Initialize the atomic component */
+    status = fwk_atomic_init(driver);
+    if (status != FWK_SUCCESS) {
+        return FWK_E_PANIC;
+    }
+
+    return FWK_SUCCESS;
+}
 
 extern int fwk_interrupt_init(const struct fwk_arch_interrupt_driver *driver);
 
@@ -62,7 +99,9 @@ int fwk_arch_init(const struct fwk_arch_init_driver *driver)
         return FWK_E_PARAM;
     }
 
-    if (driver->interrupt == NULL) {
+    if ((driver->interrupt == NULL) &&
+        (driver->atomic == NULL))
+    {
         return FWK_E_PARAM;
     }
 
@@ -78,10 +117,17 @@ int fwk_arch_init(const struct fwk_arch_init_driver *driver)
         return FWK_E_PANIC;
     }
 
-    /* Initialize interrupt management */
-    status = fwk_arch_interrupt_init(driver->interrupt);
+    status = fwk_arch_atomic_init(driver->atomic);
     if (!fwk_expect(status == FWK_SUCCESS)) {
-        return FWK_E_PANIC;
+            return FWK_E_PANIC;
+    }
+
+    /* Initialize interrupt management */
+    if (driver->interrupt != NULL) {
+        status = fwk_arch_interrupt_init(driver->interrupt);
+        if (!fwk_expect(status == FWK_SUCCESS)) {
+            return FWK_E_PANIC;
+        }
     }
 
     status = fwk_module_start();
