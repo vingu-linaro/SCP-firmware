@@ -52,9 +52,9 @@ FILE_TYPES = [
 # Supported comment styles (Python regex)
 #
 COMMENT_PATTERN = '^(( \\*)|(;)|(\\#))'
-COMPANY_PATTERN = '(Arm|Renesas)'
+COMPANY_PATTERN = '(Arm|Renesas|Linaro)'
 COMPANY_FULL_NAME_PATTERN = \
-    '(Arm Limited and Contributors|Renesas Electronics Corporation)'
+    '(Arm Limited and Contributors|Renesas Electronics Corporation|Linaro Limited and Contributors)'
 
 #
 # git command using diff-filter to include Added (A), Copied (C), Modified (M),
