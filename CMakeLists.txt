@@ -246,7 +246,8 @@ include(CMakeDependentOption)
 
 # Common build options
 
-if(SCP_ARCHITECTURE STREQUAL "optee")
+if(SCP_ARCHITECTURE STREQUAL "optee" OR
+   SCP_ARCHITECTURE STREQUAL "sp")
     set(SCP_ENABLE_SUB_SYSTEM_MODE_INIT TRUE)
 endif()
 
