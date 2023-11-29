@@ -4,3 +4,6 @@
 [submodule "contrib/cmock/git"]
 	path = contrib/cmock/git
 	url = https://github.com/ThrowTheSwitch/CMock
+[submodule "arch/none/sp/tftf"]
+	path = product/secure-partition/common/tee
+	url= https://git.linaro.org/people/vincent.guittot/tf-a-tests.git
