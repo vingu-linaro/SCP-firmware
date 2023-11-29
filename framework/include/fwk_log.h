@@ -12,6 +12,9 @@
 #include <fwk_io.h>
 #include <fwk_macros.h>
 
+__attribute__((format(printf, 1, 2)))
+extern void mp_printf(const char *fmt, ...);
+
 #if FWK_HAS_INCLUDE(<fmw_log.h>)
 #    include <fmw_log.h> /* cppcheck-suppress missingIncludeSystem */
 #endif
@@ -226,7 +229,7 @@
  */
 
 #ifdef FWK_LOG_LOCAL_ENABLE
-#    define FWK_LOG_LOCAL(...) fwk_log_printf(__VA_ARGS__)
+#    define FWK_LOG_LOCAL(...) mp_printf(__VA_ARGS__)
 #else
 #    define FWK_LOG_LOCAL(...)
 #endif
@@ -240,7 +243,7 @@
  */
 
 #if FWK_LOG_LEVEL <= FWK_LOG_LEVEL_DEBUG
-#    define FWK_LOG_DEBUG(...) fwk_log_printf(__VA_ARGS__)
+#    define FWK_LOG_DEBUG(...) mp_printf(__VA_ARGS__)
 #else
 #    define FWK_LOG_DEBUG(...)
 #endif
@@ -254,7 +257,7 @@
  */
 
 #if FWK_LOG_LEVEL <= FWK_LOG_LEVEL_INFO
-#    define FWK_LOG_INFO(...) fwk_log_printf(__VA_ARGS__)
+#    define FWK_LOG_INFO(...) mp_printf(__VA_ARGS__)
 #else
 #    define FWK_LOG_INFO(...)
 #endif
@@ -268,7 +271,7 @@
  */
 
 #if FWK_LOG_LEVEL <= FWK_LOG_LEVEL_WARN
-#    define FWK_LOG_WARN(...) fwk_log_printf(__VA_ARGS__)
+#    define FWK_LOG_WARN(...) mp_printf(__VA_ARGS__)
 #else
 #    define FWK_LOG_WARN(...)
 #endif
@@ -282,7 +285,7 @@
  */
 
 #if FWK_LOG_LEVEL <= FWK_LOG_LEVEL_ERROR
-#    define FWK_LOG_ERR(...) fwk_log_printf(__VA_ARGS__)
+#    define FWK_LOG_ERR(...) mp_printf(__VA_ARGS__)
 #else
 #    define FWK_LOG_ERR(...)
 #endif
@@ -296,7 +299,7 @@
  */
 
 #if FWK_LOG_LEVEL <= FWK_LOG_LEVEL_CRIT
-#    define FWK_LOG_CRIT(...) fwk_log_printf(__VA_ARGS__)
+#    define FWK_LOG_CRIT(...) mp_printf(__VA_ARGS__)
 #else
 #    define FWK_LOG_CRIT(...)
 #endif

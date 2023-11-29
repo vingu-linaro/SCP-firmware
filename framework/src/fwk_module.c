@@ -451,7 +451,7 @@ int fwk_module_start(void)
 
     fwk_module_ctx.initialized = true;
 
-    FWK_LOG_CRIT("[FWK] Module initialization complete!");
+    FWK_LOG_CRIT("[FWK] Module initialization complete!\n");
 
     return FWK_SUCCESS;
 }
