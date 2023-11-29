@@ -494,7 +494,6 @@ if(SCP_FIRMWARE)
     add_subdirectory("doc" EXCLUDE_FROM_ALL)
 endif()
 
-
 set(SCP_FIRMWARE_LIB "${SCP_FIRMWARE_TARGET}-all")
 
 # merged libraries is only built when `make ${SCP_FIRMWARE_LIB}` is issued
@@ -503,8 +502,18 @@ add_custom_target(${SCP_FIRMWARE_LIB}
         COMMAND ${CMAKE_AR} rcT $<TARGET_FILE_DIR:${SCP_FIRMWARE_TARGET}>/lib${SCP_FIRMWARE_LIB}.a ${scp_libraries}
         COMMENT " Merging all libraries in a single lib${SCP_FIRMWARE_LIB}.a"
 )
-
 add_dependencies(${SCP_FIRMWARE_LIB} ${SCP_FIRMWARE_TARGET})
+
+set(SCP_FIRMWARE_LIB_SP "${SCP_FIRMWARE_TARGET}-sp")
+
+# merged libraries is only built when `make ${SCP_FIRMWARE_LIB}` is issued
+add_custom_target(${SCP_FIRMWARE_LIB_SP}
+    # COMMAND/COMMENT must be upper case
+        COMMAND make BUILD_BASE=$<TARGET_FILE_DIR:${SCP_FIRMWARE_TARGET}> PLAT=fvp LOG_LEVEL=50 V=1 LIB_SCMI=$<TARGET_FILE_DIR:${SCP_FIRMWARE_TARGET}> INCLUDE_SCMI=../../../../arch/none/sp/include scmi
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/product/secure-partition/common/tee/
+	COMMENT " Call make of tftf sub module to generate ${SCP_FIRMWARE_TARGET}.bin"
+)
+add_dependencies(${SCP_FIRMWARE_LIB_SP} ${SCP_FIRMWARE_LIB})
 
 #
 # Set up global inclusions and exclusions for source file quality assurance
