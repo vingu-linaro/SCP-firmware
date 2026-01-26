@@ -6,4 +6,4 @@
 	url = https://github.com/ThrowTheSwitch/CMock
 [submodule "arch/none/sp/tftf"]
 	path = product/secure-partition/common/tee
-	url= https://git.linaro.org/people/vincent.guittot/tf-a-tests.git
+	url= https://github.com/vingu-linaro/tf-a-tests.git
