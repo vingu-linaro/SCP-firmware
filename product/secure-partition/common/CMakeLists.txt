@@ -20,5 +20,5 @@ set(SCP_MODULE_PATHS ${SCP_MODULE_PATHS} PARENT_SCOPE)
 
 # Add the execution environnement of secure partition
 # This is based on Trusted Firmware Test Framework
-add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/tee")
+#add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/tee")
 
